@@ -179,22 +179,31 @@ class _HomePageState extends State<HomePage> {
               itemBuilder: (BuildContext context, int index) {
                 var task = _taskController.taskList[index];
 
-                if (task.repeat == 'Daily' ||
-                    task.date == DateFormat.yMd().format(_selectedDate) ||
-                    (task.repeat == 'Weekly' &&
-                        _selectedDate
-                                    .difference(
-                                        DateFormat.yMd().parse(task.date!))
-                                    .inDays %
-                                7 ==
-                            0) ||
-                    (task.repeat == 'Monthly' &&
-                        DateFormat.yMd().parse(task.date!).day ==
-                            _selectedDate.day)) {
+                // Check if task should be shown based on date and repeat settings
+                bool shouldShow = false;
+
+                if (task.repeat == 'Daily') {
+                  shouldShow = true;
+                } else if (task.repeat == 'Weekly') {
+                  shouldShow = _selectedDate
+                      .difference(DateFormat.yMd().parse(task.date!))
+                      .inDays %
+                      7 ==
+                      0;
+                } else if (task.repeat == 'Monthly') {
+                  shouldShow = DateFormat.yMd().parse(task.date!).day ==
+                      _selectedDate.day;
+                } else {
+                  // For non-repeating tasks, only show on the exact date
+                  var taskDate = DateFormat.yMd().parse(task.date!);
+                  shouldShow = taskDate.year == _selectedDate.year &&
+                             taskDate.month == _selectedDate.month &&
+                             taskDate.day == _selectedDate.day;
+                }
+
+                if (shouldShow) {
                   try {
-                  /*   var hour = task.startTime.toString().split(':')[0];
-                    var minutes = task.startTime.toString().split(':')[1]; */
-                    var date = DateFormat.jm().parse(task.startTime!);
+                    var date = DateFormat('hh:mm a').parse(task.startTime!.trim());
                     var myTime = DateFormat('HH:mm').format(date);
 
                     notifyHelper.scheduledNotification(
@@ -205,22 +214,22 @@ class _HomePageState extends State<HomePage> {
                   } catch (e) {
                     print('Error parsing time: $e');
                   }
-                } else {
-                  Container();
-                }
-                return AnimationConfiguration.staggeredList(
-                  position: index,
-                  duration: const Duration(milliseconds: 1375),
-                  child: SlideAnimation(
-                    horizontalOffset: 300,
-                    child: FadeInAnimation(
-                      child: GestureDetector(
-                        onTap: () => _showBottomSheet(context, task),
-                        child: TaskTile(task),
+
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 1375),
+                    child: SlideAnimation(
+                      horizontalOffset: 300,
+                      child: FadeInAnimation(
+                        child: GestureDetector(
+                          onTap: () => _showBottomSheet(context, task),
+                          child: TaskTile(task),
+                        ),
                       ),
                     ),
-                  ),
-                );
+                  );
+                }
+                return Container(); // Return empty container for tasks that shouldn't be shown
               },
               itemCount: _taskController.taskList.length,
             ),

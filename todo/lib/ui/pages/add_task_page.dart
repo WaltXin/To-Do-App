@@ -332,15 +332,24 @@ class _AddTaskPageState extends State<AddTaskPage> {
               DateTime.now().add(const Duration(minutes: 15))),
     );
 
-    // ignore: use_build_context_synchronously
-    String formattedTime = pickedTime!.format(context);
+    if (pickedTime != null) {
+      // ignore: use_build_context_synchronously
+      DateTime parsedTime = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+      String formattedTime = DateFormat('hh:mm a').format(parsedTime);
 
-    if (isStartTime) {
-      setState(() => _startTime = formattedTime);
-    } else if (!isStartTime) {
-      setState(() => _endTime = formattedTime);
+      if (isStartTime) {
+        setState(() => _startTime = formattedTime);
+      } else {
+        setState(() => _endTime = formattedTime);
+      }
     } else {
-      print('Something went wrong !');
+      print('Time cancelled or not selected');
     }
   }
 }
