@@ -9,7 +9,8 @@ import '../widgets/input_field.dart';
 
 class AddTaskPage extends StatefulWidget {
   final Task? task;
-  const AddTaskPage({Key? key, this.task}) : super(key: key);
+  final DateTime? initialDate;
+  const AddTaskPage({Key? key, this.task, this.initialDate}) : super(key: key);
 
   @override
   State<AddTaskPage> createState() => _AddTaskPageState();
@@ -21,11 +22,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
 
-  DateTime _selectedDate = DateTime.now();
-  String _startTime = DateFormat('hh:mm a').format(DateTime.now()).toString();
-  String _endTime = DateFormat('hh:mm a')
-      .format(DateTime.now().add(const Duration(minutes: 15)))
-      .toString();
+  late DateTime _selectedDate;
+  late String _startTime;
+  late String _endTime;
 
   int _selectedRemind = 5;
   List<int> remindList = [5, 10, 15, 20];
@@ -37,6 +36,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   @override
   void initState() {
     super.initState();
+    // Initialize date and time based on initialDate or current task
     if (widget.task != null) {
       _titleController.text = widget.task!.title!;
       _noteController.text = widget.task!.note!;
@@ -46,6 +46,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
       _selectedRemind = widget.task!.remind!;
       _selectedRepeat = widget.task!.repeat!;
       _selectedColor = widget.task!.color!;
+    } else {
+      _selectedDate = widget.initialDate ?? DateTime.now();
+      _startTime = DateFormat('hh:mm a').format(DateTime.now()).toString();
+      _endTime = DateFormat('hh:mm a')
+          .format(DateTime.now().add(const Duration(minutes: 15)))
+          .toString();
     }
   }
 
