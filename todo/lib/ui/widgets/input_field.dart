@@ -55,11 +55,11 @@ class InputField extends StatelessWidget {
                     hintStyle: subTitleStyle,
                     enabledBorder: UnderlineInputBorder(
                         borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.background,
+                      color: Theme.of(context).colorScheme.surface,
                     )),
                     focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.background,
+                      color: Theme.of(context).colorScheme.surface,
                       width: 0,
                     )),
                   ),

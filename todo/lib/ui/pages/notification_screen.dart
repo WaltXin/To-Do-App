@@ -25,7 +25,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Get.back(),
@@ -35,7 +35,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
         ),
         elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
           _payload.toString().split('|')[0],
           style: TextStyle(color: Get.isDarkMode ? Colors.white : darkGreyClr),

@@ -41,7 +41,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: _customAppBar(),
       body: Column(
         children: [
@@ -71,7 +71,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       elevation: 0,
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       actions: [
         IconButton(
           icon: Icon(Icons.cleaning_services_outlined,
