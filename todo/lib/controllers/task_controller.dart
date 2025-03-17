@@ -28,4 +28,10 @@ class TaskController extends GetxController {
     await DBHelper.update(id);
     getTasks();
   }
+
+  Future<int> editTask(Task task) async {
+    final result = await DBHelper.updateTask(task);
+    getTasks();
+    return result;
+  }
 }

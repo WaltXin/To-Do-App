@@ -329,6 +329,17 @@ class _HomePageState extends State<HomePage> {
                       Get.back();
                     },
                     clr: primaryClr),
+            task.isCompleted == 1
+                ? Container()
+                : _buildBottomSheet(
+                    label: 'Edit Task',
+                    onTap: () async {
+                      NotifyHelper().cancelNotification(task);
+                      Get.back();
+                      await Get.to(() => AddTaskPage(task: task));
+                      _taskController.getTasks();
+                    },
+                    clr: Colors.green[300]!),
             _buildBottomSheet(
                 label: 'Delete Task',
                 onTap: () {

@@ -8,7 +8,8 @@ import '../../models/task.dart';
 import '../widgets/input_field.dart';
 
 class AddTaskPage extends StatefulWidget {
-  const AddTaskPage({Key? key}) : super(key: key);
+  final Task? task;
+  const AddTaskPage({Key? key, this.task}) : super(key: key);
 
   @override
   State<AddTaskPage> createState() => _AddTaskPageState();
@@ -34,6 +35,21 @@ class _AddTaskPageState extends State<AddTaskPage> {
   int _selectedColor = 0;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.task != null) {
+      _titleController.text = widget.task!.title!;
+      _noteController.text = widget.task!.note!;
+      _selectedDate = DateFormat.yMd().parse(widget.task!.date!);
+      _startTime = widget.task!.startTime!;
+      _endTime = widget.task!.endTime!;
+      _selectedRemind = widget.task!.remind!;
+      _selectedRepeat = widget.task!.repeat!;
+      _selectedColor = widget.task!.color!;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -44,7 +60,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           child: Column(
             children: [
               Text(
-                'Add Task',
+                widget.task == null ? 'Add Task' : 'Edit Task',
                 style: headingStyle,
               ),
               InputField(
@@ -184,7 +200,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 children: [
                   _colorPalette(),
                   MyButton(
-                      label: 'Create Task',
+                      label: widget.task == null ? 'Create Task' : 'Update Task',
                       onTap: () {
                         _validateData();
                       }),
@@ -224,7 +240,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   _validateData() {
     if (_titleController.text.isNotEmpty && _noteController.text.isNotEmpty) {
-      _addTasksToDb();
+      if (widget.task == null) {
+        _addTasksToDb();
+      } else {
+        _updateTaskInDb();
+      }
       Get.back();
     } else if (_titleController.text.isNotEmpty ||
         _noteController.text.isNotEmpty) {
@@ -236,9 +256,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
             Icons.warning_amber_rounded,
             color: Colors.red,
           ));
-    } else {
-      print(
-          '############################ SOMETHING WRONG HAPPENED #############################');
     }
   }
 
@@ -258,6 +275,27 @@ class _AddTaskPageState extends State<AddTaskPage> {
         ),
       );
       print('Value: $value');
+    } catch (e) {
+      print('error: $e');
+    }
+  }
+
+  _updateTaskInDb() async {
+    try {
+      await _taskController.editTask(
+        Task(
+          id: widget.task!.id,
+          title: _titleController.text,
+          note: _noteController.text,
+          isCompleted: widget.task!.isCompleted,
+          date: DateFormat.yMd().format(_selectedDate),
+          startTime: _startTime,
+          endTime: _endTime,
+          color: _selectedColor,
+          remind: _selectedRemind,
+          repeat: _selectedRepeat,
+        ),
+      );
     } catch (e) {
       print('error: $e');
     }
