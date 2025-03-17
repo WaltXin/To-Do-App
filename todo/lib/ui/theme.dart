@@ -13,16 +13,32 @@ const Color darkHeaderClr = Color(0xFF424242);
 class Themes {
   static final light = ThemeData(
     primaryColor: primaryClr,
-    // ignore: deprecated_member_use
-    backgroundColor: Colors.white,
-    brightness: Brightness.light,
+    colorScheme: const ColorScheme(
+      brightness: Brightness.light,
+      primary: primaryClr,
+      onPrimary: white,
+      secondary: primaryClr,
+      onSecondary: white,
+      error: Colors.red,
+      onError: white,
+      surface: white,
+      onSurface: Colors.black,
+    ),
   );
 
   static final dark = ThemeData(
     primaryColor: darkGreyClr,
-    // ignore: deprecated_member_use
-    backgroundColor: darkGreyClr,
-    brightness: Brightness.dark,
+    colorScheme: const ColorScheme(
+      brightness: Brightness.dark,
+      primary: darkGreyClr,
+      onPrimary: white,
+      secondary: darkGreyClr,
+      onSecondary: white,
+      error: Colors.red,
+      onError: white,
+      surface: darkGreyClr,
+      onSurface: white,
+    ),
   );
 }
 
