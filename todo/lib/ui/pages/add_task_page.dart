@@ -127,9 +127,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
         ),
       ),
       child: Scaffold(
-        backgroundColor: Colors.black87,
+        backgroundColor: darkGreyClr,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: darkGreyClr,
           elevation: 0,
           title: Text(
             widget.task == null ? 'New Task' : 'Edit Task',

@@ -45,8 +45,16 @@ Follow these instructions to get the project up and running on your local machin
    flutter pub get
    ```
 
+4. Start the Iphone Simulator
+
+   ```bash
+   open -a Simulator
+   ```
+
+
 4. Run the app:
 
    ```bash
    flutter run
    ```
+

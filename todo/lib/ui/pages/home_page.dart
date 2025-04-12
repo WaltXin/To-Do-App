@@ -41,7 +41,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: darkGreyClr,
       appBar: _customAppBar(),
       body: Column(
         children: [
@@ -53,38 +53,15 @@ class _HomePageState extends State<HomePage> {
           _showTasks(),
         ],
       ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
   AppBar _customAppBar() {
     return AppBar(
-      leading: IconButton(
-        onPressed: () {
-          ThemeServices().switchTheme();
-        },
-        icon: Icon(
-          Get.isDarkMode
-              ? Icons.wb_sunny_outlined
-              : Icons.nightlight_round_outlined,
-          size: 24,
-          color: Get.isDarkMode ? Colors.white : darkGreyClr,
-        ),
-      ),
       elevation: 0,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: darkGreyClr,
       actions: [
-        IconButton(
-          icon: Icon(Icons.cleaning_services_outlined,
-              size: 24, color: Get.isDarkMode ? Colors.white : darkGreyClr),
-          onPressed: () {
-            notifyHelper.cancelAllNotifications();
-            _taskController.deleteAllTasks();
-          },
-        ),
-        const CircleAvatar(
-          backgroundImage: AssetImage('images/person.jpeg'),
-          radius: 18,
-        ),
         const SizedBox(
           width: 20,
         ),
@@ -96,28 +73,29 @@ class _HomePageState extends State<HomePage> {
   _addTaskBar() {
     return Container(
       margin: const EdgeInsets.only(left: 20, right: 10, top: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat.yMMMMd().format(DateTime.now()),
-                style: subHeadingStyle,
+          Text(
+            DateFormat.yMMMMd().format(DateTime.now()),
+            style: GoogleFonts.lato(
+              textStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
-              Text(
-                'Today',
-                style: subHeadingStyle,
-              ),
-            ],
+            ),
           ),
-          MyButton(
-              label: '+ Add Task',
-              onTap: () async {
-                await Get.to(() => AddTaskPage(initialDate: _selectedDate));
-                _taskController.getTasks();
-              }),
+          Text(
+            'Today',
+            style: GoogleFonts.lato(
+              textStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -135,19 +113,19 @@ class _HomePageState extends State<HomePage> {
         selectionColor: primaryClr,
         dateTextStyle: GoogleFonts.lato(
             textStyle: const TextStyle(
-          color: Colors.grey,
+          color: Colors.white70,
           fontSize: 20,
           fontWeight: FontWeight.w600,
         )),
         dayTextStyle: GoogleFonts.lato(
             textStyle: const TextStyle(
-          color: Colors.grey,
+          color: Colors.white70,
           fontSize: 16,
           fontWeight: FontWeight.w600,
         )),
         monthTextStyle: GoogleFonts.lato(
             textStyle: const TextStyle(
-          color: Colors.grey,
+          color: Colors.white70,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         )),
@@ -273,7 +251,13 @@ class _HomePageState extends State<HomePage> {
                         horizontal: 30, vertical: 10),
                     child: Text(
                       'You do not have any tasks yet!\nAdd new tasks to make your days productive.',
-                      style: subTitleStyle,
+                      style: GoogleFonts.lato(
+                        textStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -393,6 +377,106 @@ class _HomePageState extends State<HomePage> {
                 isClose ? titleStyle : titleStyle.copyWith(color: Colors.white),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: darkGreyClr,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavButton(
+              icon: Icons.timeline,
+              label: 'Timeline',
+              onTap: () {
+                // Already on HomePage/Timeline, no action needed
+              },
+              isActive: true,
+            ),
+            _buildNavButton(
+              icon: Icons.mic,
+              label: 'Voice',
+              onTap: () {
+                // Voice functionality can be added here
+              },
+            ),
+            _buildNavButton(
+              icon: Icons.settings,
+              label: 'Setting',
+              onTap: () {
+                // Settings functionality can be added here
+              },
+            ),
+            _buildNavButton(
+              icon: Icons.add_circle,
+              label: '',
+              onTap: () async {
+                await Get.to(() => AddTaskPage(initialDate: _selectedDate));
+                _taskController.getTasks();
+              },
+              isMain: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isActive = false,
+    bool isMain = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: isMain ? 50 : 40,
+            height: isMain ? 50 : 40,
+            decoration: BoxDecoration(
+              color: isMain ? primaryClr : isActive ? primaryClr.withOpacity(0.1) : Colors.transparent,
+              borderRadius: BorderRadius.circular(isMain ? 25 : 10),
+            ),
+            child: Icon(
+              icon,
+              color: isMain 
+                  ? Colors.white 
+                  : isActive 
+                      ? primaryClr 
+                      : Colors.white70,
+              size: isMain ? 30 : 24,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: isActive 
+                  ? primaryClr 
+                  : Colors.white70,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }

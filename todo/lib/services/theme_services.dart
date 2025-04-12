@@ -8,7 +8,7 @@ class ThemeServices {
 
   void _saveThemeToBox(bool isDarkMode) => _box.write(_key, isDarkMode);
 
-  bool _loadThemeFromBox() => _box.read<bool>(_key) ?? false;
+  bool _loadThemeFromBox() => _box.read<bool>(_key) ?? true;
 
   ThemeMode get theme => _loadThemeFromBox() ? ThemeMode.dark : ThemeMode.light;
 

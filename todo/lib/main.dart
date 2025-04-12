@@ -12,6 +12,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DBHelper.initDb();
   await GetStorage.init();
+  
+  // Force dark mode
+  Get.changeThemeMode(ThemeMode.dark);
+  
   runApp(const MyApp());
 }
 
@@ -21,9 +25,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      theme: Themes.light,
+      theme: Themes.dark, // Set both theme and darkTheme to dark
       darkTheme: Themes.dark,
-      themeMode: ThemeServices().theme,
+      themeMode: ThemeMode.dark,
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       home: const HomePage(),
