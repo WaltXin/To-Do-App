@@ -36,6 +36,7 @@ class _HomePageState extends State<HomePage> {
 
   DateTime _selectedDate = DateTime.now();
   final TaskController _taskController = Get.put(TaskController());
+  int _weekOffset = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -47,9 +48,6 @@ class _HomePageState extends State<HomePage> {
         children: [
           _addTaskBar(),
           _addDateBar(),
-          const SizedBox(
-            height: 6,
-          ),
           _showTasks(),
         ],
       ),
@@ -61,39 +59,52 @@ class _HomePageState extends State<HomePage> {
     return AppBar(
       elevation: 0,
       backgroundColor: darkGreyClr,
-      actions: [
-        const SizedBox(
-          width: 20,
-        ),
-      ],
+      toolbarHeight: 0,
       centerTitle: true,
     );
   }
 
   _addTaskBar() {
     return Container(
-      margin: const EdgeInsets.only(left: 20, right: 10, top: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      margin: const EdgeInsets.only(left: 20, right: 20, top: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            DateFormat.yMMMMd().format(DateTime.now()),
-            style: GoogleFonts.lato(
-              textStyle: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                DateFormat.yMMMMd().format(DateTime.now()),
+                style: GoogleFonts.lato(
+                  textStyle: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
+              Text(
+                'Today',
+                style: GoogleFonts.lato(
+                  textStyle: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-          Text(
-            'Today',
-            style: GoogleFonts.lato(
-              textStyle: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.notifications_none_outlined,
+              color: Colors.white70,
+              size: 24,
             ),
           ),
         ],
@@ -102,40 +113,160 @@ class _HomePageState extends State<HomePage> {
   }
 
   _addDateBar() {
-    return Container(
-      margin: const EdgeInsets.only(left: 20, right: 10, top: 10),
-      child: DatePicker(
-        DateTime.now(),
-        width: 80,
-        height: 100,
-        initialSelectedDate: _selectedDate,
-        selectedTextColor: Colors.white,
-        selectionColor: primaryClr,
-        dateTextStyle: GoogleFonts.lato(
-            textStyle: const TextStyle(
-          color: Colors.white70,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        )),
-        dayTextStyle: GoogleFonts.lato(
-            textStyle: const TextStyle(
-          color: Colors.white70,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        )),
-        monthTextStyle: GoogleFonts.lato(
-            textStyle: const TextStyle(
-          color: Colors.white70,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        )),
-        onDateChange: (newDate) {
-          setState(() {
-            _selectedDate = newDate;
-          });
-        },
-      ),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(left: 20),
+              child: Text(
+                _currentWeekText(),
+                style: GoogleFonts.lato(
+                  textStyle: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(right: 20),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _weekOffset = _weekOffset > 0 ? _weekOffset - 1 : 0;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: _weekOffset > 0 ? Colors.grey[700] : Colors.grey[800],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.chevron_left,
+                        color: _weekOffset > 0 ? Colors.white : Colors.grey,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _weekOffset++;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[700],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          height: 90,
+          decoration: BoxDecoration(
+            color: Colors.grey[800],
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 7, // 显示一周的日期
+              itemBuilder: (context, index) {
+                final date = DateTime.now().add(Duration(days: index + (_weekOffset * 7)));
+                final isSelected = _selectedDate.year == date.year && 
+                                  _selectedDate.month == date.month && 
+                                  _selectedDate.day == date.day;
+                
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                  },
+                  child: Container(
+                    width: 60,
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    decoration: BoxDecoration(
+                      color: isSelected ? primaryClr : Colors.transparent,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          DateFormat('EEE').format(date),
+                          style: GoogleFonts.lato(
+                            textStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '${date.day}',
+                          style: GoogleFonts.lato(
+                            textStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          DateFormat('MMM').format(date).substring(0, 3),
+                          style: GoogleFonts.lato(
+                            textStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
+  }
+
+  String _currentWeekText() {
+    final startDate = DateTime.now().add(Duration(days: _weekOffset * 7));
+    final endDate = startDate.add(const Duration(days: 6));
+    
+    if (startDate.month == endDate.month) {
+      return "${DateFormat('MMM').format(startDate)} ${startDate.day} - ${endDate.day}";
+    } else {
+      return "${DateFormat('MMM').format(startDate)} ${startDate.day} - ${DateFormat('MMM').format(endDate)} ${endDate.day}";
+    }
   }
 
   Future<void> _onRefresh() async {
@@ -148,68 +279,75 @@ class _HomePageState extends State<HomePage> {
         if (_taskController.taskList.isEmpty) {
           return _noTaskMsg();
         } else {
-          return RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: ListView.builder(
-              scrollDirection: SizeConfig.orientation == Orientation.landscape
-                  ? Axis.horizontal
-                  : Axis.vertical,
-              itemBuilder: (BuildContext context, int index) {
-                var task = _taskController.taskList[index];
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            child: RefreshIndicator(
+              onRefresh: _onRefresh,
+              backgroundColor: darkGreyClr,
+              color: primaryClr,
+              child: ListView.builder(
+                padding: const EdgeInsets.only(top: 5),
+                scrollDirection: SizeConfig.orientation == Orientation.landscape
+                    ? Axis.horizontal
+                    : Axis.vertical,
+                physics: const BouncingScrollPhysics(),
+                itemBuilder: (BuildContext context, int index) {
+                  var task = _taskController.taskList[index];
 
-                // Check if task should be shown based on date and repeat settings
-                bool shouldShow = false;
+                  // Check if task should be shown based on date and repeat settings
+                  bool shouldShow = false;
 
-                if (task.repeat == 'Daily') {
-                  shouldShow = true;
-                } else if (task.repeat == 'Weekly') {
-                  shouldShow = _selectedDate
-                      .difference(DateFormat.yMd().parse(task.date!))
-                      .inDays %
-                      7 ==
-                      0;
-                } else if (task.repeat == 'Monthly') {
-                  shouldShow = DateFormat.yMd().parse(task.date!).day ==
-                      _selectedDate.day;
-                } else {
-                  // For non-repeating tasks, only show on the exact date
-                  var taskDate = DateFormat.yMd().parse(task.date!);
-                  shouldShow = taskDate.year == _selectedDate.year &&
-                             taskDate.month == _selectedDate.month &&
-                             taskDate.day == _selectedDate.day;
-                }
-
-                if (shouldShow) {
-                  try {
-                    var date = DateFormat('hh:mm a').parse(task.startTime!.trim());
-                    var myTime = DateFormat('HH:mm').format(date);
-
-                    notifyHelper.scheduledNotification(
-                      int.parse(myTime.toString().split(':')[0]),
-                      int.parse(myTime.toString().split(':')[1]),
-                      task,
-                    );
-                  } catch (e) {
-                    print('Error parsing time: $e');
+                  if (task.repeat == 'Daily') {
+                    shouldShow = true;
+                  } else if (task.repeat == 'Weekly') {
+                    shouldShow = _selectedDate
+                        .difference(DateFormat.yMd().parse(task.date!))
+                        .inDays %
+                        7 ==
+                        0;
+                  } else if (task.repeat == 'Monthly') {
+                    shouldShow = DateFormat.yMd().parse(task.date!).day ==
+                        _selectedDate.day;
+                  } else {
+                    // For non-repeating tasks, only show on the exact date
+                    var taskDate = DateFormat.yMd().parse(task.date!);
+                    shouldShow = taskDate.year == _selectedDate.year &&
+                              taskDate.month == _selectedDate.month &&
+                              taskDate.day == _selectedDate.day;
                   }
 
-                  return AnimationConfiguration.staggeredList(
-                    position: index,
-                    duration: const Duration(milliseconds: 1375),
-                    child: SlideAnimation(
-                      horizontalOffset: 300,
-                      child: FadeInAnimation(
-                        child: GestureDetector(
-                          onTap: () => _showBottomSheet(context, task),
-                          child: TaskTile(task),
+                  if (shouldShow) {
+                    try {
+                      var date = DateFormat('hh:mm a').parse(task.startTime!.trim());
+                      var myTime = DateFormat('HH:mm').format(date);
+
+                      notifyHelper.scheduledNotification(
+                        int.parse(myTime.toString().split(':')[0]),
+                        int.parse(myTime.toString().split(':')[1]),
+                        task,
+                      );
+                    } catch (e) {
+                      print('Error parsing time: $e');
+                    }
+
+                    return AnimationConfiguration.staggeredList(
+                      position: index,
+                      duration: const Duration(milliseconds: 1375),
+                      child: SlideAnimation(
+                        horizontalOffset: 300,
+                        child: FadeInAnimation(
+                          child: GestureDetector(
+                            onTap: () => _showBottomSheet(context, task),
+                            child: TaskTile(task),
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }
-                return Container(); // Return empty container for tasks that shouldn't be shown
-              },
-              itemCount: _taskController.taskList.length,
+                    );
+                  }
+                  return Container(); // Return empty container for tasks that shouldn't be shown
+                },
+                itemCount: _taskController.taskList.length,
+              ),
             ),
           );
         }
@@ -218,68 +356,89 @@ class _HomePageState extends State<HomePage> {
   }
 
   _noTaskMsg() {
-    return Stack(
-      children: [
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 2000),
-          child: RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: SingleChildScrollView(
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                direction: SizeConfig.orientation == Orientation.landscape
-                    ? Axis.horizontal
-                    : Axis.vertical,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              shape: BoxShape.circle,
+            ),
+            child: SvgPicture.asset(
+              'images/task.svg',
+              // ignore: deprecated_member_use
+              color: primaryClr.withOpacity(0.7),
+              height: 70,
+              semanticsLabel: 'Task',
+            ),
+          ),
+          const SizedBox(height: 15),
+          Text(
+            'No Tasks Yet!',
+            style: GoogleFonts.lato(
+              textStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Add new tasks to make your days productive.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.lato(
+              textStyle: const TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          const SizedBox(height: 25),
+          InkWell(
+            onTap: () async {
+              await Get.to(() => AddTaskPage(initialDate: _selectedDate));
+              _taskController.getTasks();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+              decoration: BoxDecoration(
+                color: primaryClr,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizeConfig.orientation == Orientation.landscape
-                      ? const SizedBox(
-                          height: 6,
-                        )
-                      : const SizedBox(
-                          height: 220,
-                        ),
-                  SvgPicture.asset(
-                    'images/task.svg',
-                    // ignore: deprecated_member_use
-                    color: primaryClr.withOpacity(0.5),
-                    height: 90,
-                    semanticsLabel: 'Task',
+                  const Icon(
+                    Icons.add,
+                    color: Colors.white,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 10),
-                    child: Text(
-                      'You do not have any tasks yet!\nAdd new tasks to make your days productive.',
-                      style: GoogleFonts.lato(
-                        textStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Add Task',
+                    style: GoogleFonts.lato(
+                      textStyle: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                  SizeConfig.orientation == Orientation.landscape
-                      ? const SizedBox(
-                          height: 120,
-                        )
-                      : const SizedBox(
-                          height: 180,
-                        ),
                 ],
               ),
             ),
           ),
-        )
-      ],
+        ],
+      ),
     );
   }
 
   _showBottomSheet(BuildContext context, Task task) {
-    Get.bottomSheet(SingleChildScrollView(
-      child: Container(
+    Get.bottomSheet(
+      Container(
         padding: const EdgeInsets.only(top: 4),
         width: SizeConfig.screenWidth,
         height: (SizeConfig.orientation == Orientation.landscape)
@@ -289,33 +448,33 @@ class _HomePageState extends State<HomePage> {
             : (task.isCompleted == 1
                 ? SizeConfig.screenHeight * 0.30
                 : SizeConfig.screenHeight * 0.39),
-        color: Get.isDarkMode ? darkHeaderClr : Colors.white,
+        color: darkGreyClr,
         child: Column(
           children: [
-            Flexible(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Get.isDarkMode ? Colors.grey[600] : Colors.grey[300],
-                ),
+            Container(
+              height: 6,
+              width: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.grey[600],
               ),
-            ),
-            const SizedBox(
-              height: 20,
+              margin: const EdgeInsets.only(top: 10, bottom: 20),
             ),
             task.isCompleted == 1
                 ? Container()
-                : _buildBottomSheet(
-                    label: 'Task Completed',
+                : _buildBottomSheetButton(
+                    label: 'Mark Complete',
                     onTap: () {
                       NotifyHelper().cancelNotification(task);
                       _taskController.markTaskAsCompleted(task.id!);
                       Get.back();
                     },
-                    clr: primaryClr),
+                    clr: primaryClr,
+                    icon: Icons.check_circle_outline,
+                  ),
             task.isCompleted == 1
                 ? Container()
-                : _buildBottomSheet(
+                : _buildBottomSheetButton(
                     label: 'Edit Task',
                     onTap: () async {
                       NotifyHelper().cancelNotification(task);
@@ -323,79 +482,100 @@ class _HomePageState extends State<HomePage> {
                       await Get.to(() => AddTaskPage(task: task));
                       _taskController.getTasks();
                     },
-                    clr: Colors.green[300]!),
-            _buildBottomSheet(
-                label: 'Delete Task',
-                onTap: () {
-                  NotifyHelper().cancelNotification(task);
-                  _taskController.deleteTasks(task);
-                  Get.back();
-                },
-                clr: Colors.red[300]!),
-            Divider(color: Get.isDarkMode ? Colors.grey : darkGreyClr),
-            _buildBottomSheet(
-                label: 'Cancel',
-                onTap: () {
-                  Get.back();
-                },
-                clr: primaryClr),
-            const SizedBox(
-              height: 5,
+                    clr: Colors.green[400]!,
+                    icon: Icons.edit,
+                  ),
+            _buildBottomSheetButton(
+              label: 'Delete Task',
+              onTap: () {
+                NotifyHelper().cancelNotification(task);
+                _taskController.deleteTasks(task);
+                Get.back();
+              },
+              clr: Colors.red[400]!,
+              icon: Icons.delete,
             ),
+            const SizedBox(height: 10),
+            _buildBottomSheetButton(
+              label: 'Close',
+              onTap: () {
+                Get.back();
+              },
+              clr: Colors.white,
+              isClose: true,
+              icon: Icons.close,
+            ),
+            const SizedBox(height: 10),
           ],
         ),
       ),
-    ));
+    );
   }
 
-  _buildBottomSheet(
-      {required String label,
-      required Function() onTap,
-      required Color clr,
-      bool isClose = false}) {
+  Widget _buildBottomSheetButton({
+    required String label,
+    required Function() onTap,
+    required Color clr,
+    bool isClose = false,
+    required IconData icon,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        height: 65,
-        width: SizeConfig.screenWidth * 0.9,
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 20),
+        height: 60,
         decoration: BoxDecoration(
-            border: Border.all(
-              width: 2,
-              color: isClose
-                  ? Get.isDarkMode
-                      ? Colors.grey[600]!
-                      : Colors.grey[300]!
-                  : clr,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            color: isClose ? Colors.transparent : clr),
-        child: Center(
-          child: Text(
-            label,
-            style:
-                isClose ? titleStyle : titleStyle.copyWith(color: Colors.white),
+          border: Border.all(
+            width: 2,
+            color: isClose
+                ? Colors.grey[600]!
+                : clr,
           ),
+          borderRadius: BorderRadius.circular(20),
+          color: isClose ? Colors.transparent : clr,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const SizedBox(width: 20),
+            Icon(
+              icon,
+              color: isClose ? Colors.grey[400] : Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 20),
+            Text(
+              label,
+              style: GoogleFonts.lato(
+                textStyle: TextStyle(
+                  color: isClose ? Colors.grey[400] : Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: darkGreyClr,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    return SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          color: darkGreyClr,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              spreadRadius: 0,
+              blurRadius: 10,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+        height: 70,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -409,7 +589,7 @@ class _HomePageState extends State<HomePage> {
             ),
             _buildNavButton(
               icon: Icons.mic,
-              label: 'Voice',
+              label: 'Voice AI',
               onTap: () {
                 // Voice functionality can be added here
               },
@@ -449,11 +629,11 @@ class _HomePageState extends State<HomePage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: isMain ? 50 : 40,
-            height: isMain ? 50 : 40,
+            width: isMain ? 45 : 35,
+            height: isMain ? 45 : 35,
             decoration: BoxDecoration(
               color: isMain ? primaryClr : isActive ? primaryClr.withOpacity(0.1) : Colors.transparent,
-              borderRadius: BorderRadius.circular(isMain ? 25 : 10),
+              borderRadius: BorderRadius.circular(isMain ? 22.5 : 8),
             ),
             child: Icon(
               icon,
@@ -462,20 +642,22 @@ class _HomePageState extends State<HomePage> {
                   : isActive 
                       ? primaryClr 
                       : Colors.white70,
-              size: isMain ? 30 : 24,
+              size: isMain ? 26 : 22,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isActive 
-                  ? primaryClr 
-                  : Colors.white70,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          if (label.isNotEmpty)
+            const SizedBox(height: 2),
+          if (label.isNotEmpty)
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: isActive 
+                    ? primaryClr 
+                    : Colors.white70,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
-          ),
         ],
       ),
     );
