@@ -70,30 +70,33 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat.yMMMMd().format(DateTime.now()),
-                style: GoogleFonts.lato(
-                  textStyle: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+          GestureDetector(
+            onTap: _showMonthCalendar,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  DateFormat.yMMMMd().format(DateTime.now()),
+                  style: GoogleFonts.lato(
+                    textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              Text(
-                'Today',
-                style: GoogleFonts.lato(
-                  textStyle: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Text(
+                  'Today',
+                  style: GoogleFonts.lato(
+                    textStyle: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Container(
             padding: const EdgeInsets.all(10),
@@ -187,71 +190,66 @@ class _HomePageState extends State<HomePage> {
             color: Colors.grey[800],
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: 7, // 显示一周的日期
-              itemBuilder: (context, index) {
-                final date = DateTime.now().add(Duration(days: index + (_weekOffset * 7)));
-                final isSelected = _selectedDate.year == date.year && 
-                                  _selectedDate.month == date.month && 
-                                  _selectedDate.day == date.day;
-                
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedDate = date;
-                    });
-                  },
-                  child: Container(
-                    width: 60,
-                    margin: const EdgeInsets.symmetric(horizontal: 5),
-                    decoration: BoxDecoration(
-                      color: isSelected ? primaryClr : Colors.transparent,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          DateFormat('EEE').format(date),
-                          style: GoogleFonts.lato(
-                            textStyle: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white70,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '${date.day}',
-                          style: GoogleFonts.lato(
-                            textStyle: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white70,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          DateFormat('MMM').format(date).substring(0, 3),
-                          style: GoogleFonts.lato(
-                            textStyle: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white70,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(7, (index) {
+              final date = DateTime.now().add(Duration(days: index + (_weekOffset * 7)));
+              final isSelected = _selectedDate.year == date.year && 
+                                _selectedDate.month == date.month && 
+                                _selectedDate.day == date.day;
+              
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedDate = date;
+                  });
+                },
+                child: Container(
+                  width: (MediaQuery.of(context).size.width - 56) / 7,
+                  decoration: BoxDecoration(
+                    color: isSelected ? primaryClr : Colors.transparent,
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                );
-              },
-            ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        DateFormat('EEE').format(date),
+                        style: GoogleFonts.lato(
+                          textStyle: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white70,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        '${date.day}',
+                        style: GoogleFonts.lato(
+                          textStyle: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white70,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        DateFormat('MMM').format(date).substring(0, 3),
+                        style: GoogleFonts.lato(
+                          textStyle: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white70,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ),
         ),
       ],
@@ -660,6 +658,226 @@ class _HomePageState extends State<HomePage> {
             ),
         ],
       ),
+    );
+  }
+
+  // 显示日历选择器
+  void _showMonthCalendar() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          height: 420,
+          decoration: BoxDecoration(
+            color: darkGreyClr,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(25),
+              topRight: Radius.circular(25),
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 15),
+                height: 5,
+                width: 60,
+                decoration: BoxDecoration(
+                  color: Colors.grey[600],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      DateFormat.yMMMM().format(_selectedDate),
+                      style: GoogleFonts.lato(
+                        textStyle: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left, color: Colors.white),
+                          onPressed: () {
+                            setState(() {
+                              _selectedDate = DateTime(
+                                _selectedDate.year,
+                                _selectedDate.month - 1,
+                                1,
+                              );
+                              Navigator.pop(context);
+                              _showMonthCalendar();
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right, color: Colors.white),
+                          onPressed: () {
+                            setState(() {
+                              _selectedDate = DateTime(
+                                _selectedDate.year,
+                                _selectedDate.month + 1,
+                                1,
+                              );
+                              Navigator.pop(context);
+                              _showMonthCalendar();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              // 星期几标题
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
+                  ].map((day) => Text(
+                    day,
+                    style: GoogleFonts.lato(
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  )).toList(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // 日历网格
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: _buildCalendarGrid(),
+                ),
+              ),
+              // Today 按钮
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = DateTime.now();
+                      _weekOffset = 0;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    decoration: BoxDecoration(
+                      color: primaryClr,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Today',
+                        style: GoogleFonts.lato(
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // 构建日历网格
+  Widget _buildCalendarGrid() {
+    // 当前月份的第一天
+    final firstDayOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
+    // 当前月份的总天数
+    final daysInMonth = DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day;
+    // 第一天是星期几 (1 = 周一, ..., 7 = 周日)
+    int firstWeekday = firstDayOfMonth.weekday;
+    // 因为我们的日历从周一开始，所以我们调整一下
+    if (firstWeekday == 7) firstWeekday = 0;
+    
+    // 创建包含所有日期的列表
+    List<Widget> dateWidgets = [];
+    
+    // 添加上个月的日期占位
+    for (int i = 0; i < firstWeekday; i++) {
+      dateWidgets.add(const SizedBox());
+    }
+    
+    // 添加当前月的日期
+    for (int i = 1; i <= daysInMonth; i++) {
+      final date = DateTime(_selectedDate.year, _selectedDate.month, i);
+      final isSelected = date.year == _selectedDate.year &&
+                       date.month == _selectedDate.month &&
+                       date.day == _selectedDate.day;
+      final isToday = date.year == DateTime.now().year &&
+                     date.month == DateTime.now().month &&
+                     date.day == DateTime.now().day;
+      
+      dateWidgets.add(
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedDate = date;
+              // 计算要设置的周偏移
+              final daysSinceNow = date.difference(DateTime.now()).inDays;
+              _weekOffset = (daysSinceNow / 7).floor();
+            });
+            Navigator.pop(context);
+          },
+          child: Container(
+            margin: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: isSelected ? primaryClr : (isToday ? Colors.grey[700] : Colors.transparent),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                i.toString(),
+                style: GoogleFonts.lato(
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected || isToday ? Colors.white : Colors.white70,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // 计算行数
+    int rowCount = (firstWeekday + daysInMonth) ~/ 7;
+    if ((firstWeekday + daysInMonth) % 7 != 0) rowCount++;
+    
+    // 创建网格布局
+    return GridView.count(
+      crossAxisCount: 7,
+      childAspectRatio: 1.2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: dateWidgets,
     );
   }
 }
