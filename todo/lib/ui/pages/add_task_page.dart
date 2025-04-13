@@ -370,213 +370,58 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   // Time picker
                   Container(
                     height: 130, // Reduce height
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Hour picker
-                        Expanded(
-                          child: Container(
-                            height: 130,
-                            child: ListWheelScrollView.useDelegate(
-                              controller: hourController,
-                              itemExtent: 28, // Reduce item height
-                              perspective: 0.005,
-                              diameterRatio: 1.5,
-                              physics: const FixedExtentScrollPhysics(),
-                              onSelectedItemChanged: (index) {
-                                final items = List.generate(12, (i) => (i + 1).toString().padLeft(2, '0'));
-                                final newHour = int.parse(items[index]);
-                                
-                                // 获取当前编辑的时间
-                                DateTime time = _editingStartTime ? selectedStartTime : selectedEndTime;
-                                final isPM = time.hour >= 12;
-                                final adjustedHour = isPM ? (newHour == 12 ? 12 : newHour + 12) : (newHour == 12 ? 0 : newHour);
-                                
-                                if (_editingStartTime) {
-                                  selectedStartTime = DateTime(
-                                    selectedStartTime.year,
-                                    selectedStartTime.month,
-                                    selectedStartTime.day,
-                                    adjustedHour,
-                                    selectedStartTime.minute,
-                                  );
-                                  _startTime = DateFormat('hh:mm a').format(selectedStartTime);
-                                } else {
-                                  selectedEndTime = DateTime(
-                                    selectedEndTime.year,
-                                    selectedEndTime.month,
-                                    selectedEndTime.day,
-                                    adjustedHour,
-                                    selectedEndTime.minute,
-                                  );
-                                  _endTime = DateFormat('hh:mm a').format(selectedEndTime);
-                                }
-                                
-                                // Update displayed duration
-                                durationMinutes = _calculateDurationInMinutes();
-                                setState(() {});
-                              },
-                              childDelegate: ListWheelChildBuilderDelegate(
-                                childCount: 12,
-                                builder: (context, index) {
-                                  final items = List.generate(12, (i) => (i + 1).toString().padLeft(2, '0'));
-                                  return Center(
-                                    child: Text(
-                                      items[index],
-                                      style: TextStyle(
-                                        color: hourController?.selectedItem == index ? _colorList[_selectedColor] : Colors.white70,
-                                        fontSize: hourController?.selectedItem == index ? 20 : 16,
-                                        fontWeight: hourController?.selectedItem == index ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
+                    child: _editingStartTime 
+                      ? _buildTimeWheelPicker(
+                          format.parse(_startTime),
+                          true, // 标记这是开始时间选择器
+                          (newTime) {
+                            // 验证并设置新的开始时间
+                            final newStartTimeStr = DateFormat('hh:mm a').format(newTime);
+                            final DateTime newStartTime = format.parse(newStartTimeStr);
+                            final DateTime currentEndTime = format.parse(_endTime);
+                            
+                            // 如果新开始时间晚于结束时间，同时调整结束时间
+                            setState(() {
+                              _startTime = newStartTimeStr;
+                              
+                              if (newStartTime.isAfter(currentEndTime) || 
+                                  newStartTime.isAtSameMomentAs(currentEndTime)) {
+                                // 调整结束时间为开始时间+1分钟
+                                final DateTime newEndTime = newStartTime.add(const Duration(minutes: 1));
+                                _endTime = DateFormat('hh:mm a').format(newEndTime);
+                              }
+                              
+                              // 更新持续时间显示
+                              durationMinutes = _calculateDurationInMinutes();
+                            });
+                          },
+                        )
+                      : _buildTimeWheelPicker(
+                          format.parse(_endTime),
+                          false, // 标记这是结束时间选择器
+                          (newTime) {
+                            // 验证并设置新的结束时间
+                            final newEndTimeStr = DateFormat('hh:mm a').format(newTime);
+                            final DateTime newEndTime = format.parse(newEndTimeStr);
+                            final DateTime currentStartTime = format.parse(_startTime);
+                            
+                            setState(() {
+                              // 如果新结束时间早于开始时间，调整为开始时间+1分钟
+                              if (newEndTime.isBefore(currentStartTime) || 
+                                  newEndTime.isAtSameMomentAs(currentStartTime)) {
+                                // 调整为有效的结束时间
+                                final DateTime validEndTime = currentStartTime.add(const Duration(minutes: 1));
+                                _endTime = DateFormat('hh:mm a').format(validEndTime);
+                              } else {
+                                // 正常更新结束时间
+                                _endTime = newEndTimeStr;
+                              }
+                              
+                              // 更新持续时间显示
+                              durationMinutes = _calculateDurationInMinutes();
+                            });
+                          },
                         ),
-                        
-                        // Separator
-                        Text(
-                          ":",
-                          style: TextStyle(
-                            color: _colorList[_selectedColor],
-                            fontSize: 30, // Reduce font size
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        
-                        // Minute picker
-                        Expanded(
-                          child: Container(
-                            height: 130,
-                            child: ListWheelScrollView.useDelegate(
-                              controller: minuteController,
-                              itemExtent: 28, // Reduce item height
-                              perspective: 0.005,
-                              diameterRatio: 1.5,
-                              physics: const FixedExtentScrollPhysics(),
-                              onSelectedItemChanged: (index) {
-                                final items = List.generate(60, (i) => i.toString().padLeft(2, '0'));
-                                final newMinute = int.parse(items[index]);
-                                
-                                if (_editingStartTime) {
-                                  selectedStartTime = DateTime(
-                                    selectedStartTime.year,
-                                    selectedStartTime.month,
-                                    selectedStartTime.day,
-                                    selectedStartTime.hour,
-                                    newMinute,
-                                  );
-                                  _startTime = DateFormat('hh:mm a').format(selectedStartTime);
-                                } else {
-                                  selectedEndTime = DateTime(
-                                    selectedEndTime.year,
-                                    selectedEndTime.month,
-                                    selectedEndTime.day,
-                                    selectedEndTime.hour,
-                                    newMinute,
-                                  );
-                                  _endTime = DateFormat('hh:mm a').format(selectedEndTime);
-                                }
-                                
-                                // Update displayed duration
-                                durationMinutes = _calculateDurationInMinutes();
-                                setState(() {});
-                              },
-                              childDelegate: ListWheelChildBuilderDelegate(
-                                childCount: 60,
-                                builder: (context, index) {
-                                  final items = List.generate(60, (i) => i.toString().padLeft(2, '0'));
-                                  return Center(
-                                    child: Text(
-                                      items[index],
-                                      style: TextStyle(
-                                        color: minuteController?.selectedItem == index ? _colorList[_selectedColor] : Colors.white70,
-                                        fontSize: minuteController?.selectedItem == index ? 20 : 16,
-                                        fontWeight: minuteController?.selectedItem == index ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                        
-                        // AM/PM picker
-                        Expanded(
-                          child: Container(
-                            height: 130,
-                            child: ListWheelScrollView.useDelegate(
-                              controller: periodController,
-                              itemExtent: 28, // Reduce item height
-                              perspective: 0.005,
-                              diameterRatio: 1.5,
-                              physics: const FixedExtentScrollPhysics(),
-                              onSelectedItemChanged: (index) {
-                                final items = ["AM", "PM"];
-                                final isPM = items[index] == "PM";
-                                
-                                if (_editingStartTime) {
-                                  int newHour = selectedStartTime.hour;
-                                  if (isPM && newHour < 12) {
-                                    newHour += 12;
-                                  } else if (!isPM && newHour >= 12) {
-                                    newHour -= 12;
-                                  }
-                                  
-                                  selectedStartTime = DateTime(
-                                    selectedStartTime.year,
-                                    selectedStartTime.month,
-                                    selectedStartTime.day,
-                                    newHour,
-                                    selectedStartTime.minute,
-                                  );
-                                  _startTime = DateFormat('hh:mm a').format(selectedStartTime);
-                                } else {
-                                  int newHour = selectedEndTime.hour;
-                                  if (isPM && newHour < 12) {
-                                    newHour += 12;
-                                  } else if (!isPM && newHour >= 12) {
-                                    newHour -= 12;
-                                  }
-                                  
-                                  selectedEndTime = DateTime(
-                                    selectedEndTime.year,
-                                    selectedEndTime.month,
-                                    selectedEndTime.day,
-                                    newHour,
-                                    selectedEndTime.minute,
-                                  );
-                                  _endTime = DateFormat('hh:mm a').format(selectedEndTime);
-                                }
-                                
-                                // Update displayed duration
-                                durationMinutes = _calculateDurationInMinutes();
-                                setState(() {});
-                              },
-                              childDelegate: ListWheelChildBuilderDelegate(
-                                childCount: 2,
-                                builder: (context, index) {
-                                  final items = ["AM", "PM"];
-                                  return Center(
-                                    child: Text(
-                                      items[index],
-                                      style: TextStyle(
-                                        color: periodController?.selectedItem == index ? _colorList[_selectedColor] : Colors.white70,
-                                        fontSize: periodController?.selectedItem == index ? 20 : 16,
-                                        fontWeight: periodController?.selectedItem == index ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                   
                   const SizedBox(height: 20),
@@ -1321,5 +1166,192 @@ class _AddTaskPageState extends State<AddTaskPage> {
       // 如果不同，分别显示
       return '$startTimeOnly $startPeriod–$endTimeOnly $endPeriod';
     }
+  }
+
+  Widget _buildTimeWheelPicker(DateTime initialTime, bool isStartTime, Function(DateTime) onTimeSelected) {
+    // 通过添加不同的Key，强制在每次initialTime变化时完全重建选择器
+    return Container(
+      key: ValueKey(initialTime.toString()),
+      height: 130,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Hour picker
+          Expanded(
+            child: _buildSingleWheelPicker(
+              initialTime,
+              true,  // isHour
+              false, // isPeriod
+              isStartTime, // 传入是否为开始时间的参数
+              onTimeSelected,
+            ),
+          ),
+          
+          // Separator
+          Text(
+            ":",
+            style: TextStyle(
+              color: _colorList[_selectedColor],
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          
+          // Minute picker
+          Expanded(
+            child: _buildSingleWheelPicker(
+              initialTime,
+              false, // isHour
+              false, // isPeriod
+              isStartTime, // 传入是否为开始时间的参数
+              onTimeSelected,
+            ),
+          ),
+          
+          // AM/PM picker
+          Expanded(
+            child: _buildSingleWheelPicker(
+              initialTime,
+              false, // isHour
+              true,  // isPeriod
+              isStartTime, // 传入是否为开始时间的参数
+              onTimeSelected,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // 构建单个滚轮选择器 (小时/分钟/AM PM)
+  Widget _buildSingleWheelPicker(
+    DateTime initialTime,
+    bool isHour,
+    bool isPeriod,
+    bool isStartTime, // 新增参数，表示是否为开始时间
+    Function(DateTime) onTimeSelected,
+  ) {
+    // 确定要显示的项目和初始选择的索引
+    List<String> items;
+    int initialIndex;
+    
+    if (isHour) {
+      // 小时 (1-12)
+      items = List.generate(12, (i) => (i + 1).toString().padLeft(2, '0'));
+      final int hour12 = initialTime.hour > 12 ? initialTime.hour - 12 : (initialTime.hour == 0 ? 12 : initialTime.hour);
+      initialIndex = hour12 - 1; // 转换为0-11的索引
+    } else if (isPeriod) {
+      // AM/PM
+      items = ["AM", "PM"];
+      initialIndex = initialTime.hour >= 12 ? 1 : 0;
+    } else {
+      // 分钟 (00-59)
+      items = List.generate(60, (i) => i.toString().padLeft(2, '0'));
+      initialIndex = initialTime.minute;
+    }
+    
+    // 滚轮滚动控制器
+    final controller = FixedExtentScrollController(initialItem: initialIndex);
+    
+    return Container(
+      height: 130,
+      child: ListWheelScrollView(
+        controller: controller,
+        itemExtent: 28,
+        perspective: 0.005,
+        diameterRatio: 1.5,
+        physics: const FixedExtentScrollPhysics(),
+        onSelectedItemChanged: (index) {
+          DateTime newTime;
+          
+          if (isHour) {
+            // 小时更改
+            final newHour = index + 1; // 从1-12
+            final is24PM = initialTime.hour >= 12;
+            int hour24;
+            
+            if (newHour == 12) {
+              hour24 = is24PM ? 12 : 0;
+            } else {
+              hour24 = is24PM ? newHour + 12 : newHour;
+            }
+            
+            newTime = DateTime(
+              initialTime.year,
+              initialTime.month,
+              initialTime.day,
+              hour24,
+              initialTime.minute,
+            );
+          } else if (isPeriod) {
+            // AM/PM更改
+            final bool newIsPM = index == 1;
+            int newHour = initialTime.hour;
+            
+            if (newIsPM && newHour < 12) {
+              newHour += 12;
+            } else if (!newIsPM && newHour >= 12) {
+              newHour -= 12;
+            }
+            
+            newTime = DateTime(
+              initialTime.year,
+              initialTime.month,
+              initialTime.day,
+              newHour,
+              initialTime.minute,
+            );
+          } else {
+            // 分钟更改
+            newTime = DateTime(
+              initialTime.year,
+              initialTime.month,
+              initialTime.day,
+              initialTime.hour,
+              index,
+            );
+          }
+          
+          // 先验证新时间的有效性，然后再通知上层
+          if (!isStartTime) {
+            // 如果是编辑结束时间，验证其是否晚于开始时间
+            final DateFormat format = DateFormat('hh:mm a');
+            final DateTime startDateTime = format.parse(_startTime);
+            
+            // 如果新结束时间早于开始时间，将其调整为开始时间+1分钟
+            if (newTime.isBefore(startDateTime) || newTime.isAtSameMomentAs(startDateTime)) {
+              newTime = startDateTime.add(const Duration(minutes: 1));
+              
+              // 需要重新计算正确的滚轮位置，但这里不立即更新UI
+              // 在onTimeSelected回调中会处理UI更新
+            }
+          } else {
+            // 如果是编辑开始时间，验证其是否早于结束时间
+            final DateFormat format = DateFormat('hh:mm a');
+            final DateTime endDateTime = format.parse(_endTime);
+            
+            // 如果新开始时间晚于结束时间，同时更新结束时间为开始时间+1分钟
+            if (newTime.isAfter(endDateTime) || newTime.isAtSameMomentAs(endDateTime)) {
+              // 设置新的结束时间，会在onTimeSelected回调中更新UI
+            }
+          }
+          
+          // 通知父级选中时间已更改
+          onTimeSelected(newTime);
+        },
+        children: List.generate(items.length, (index) {
+          return Center(
+            child: Text(
+              items[index],
+              style: TextStyle(
+                color: index == initialIndex ? _colorList[_selectedColor] : Colors.white70,
+                fontSize: index == initialIndex ? 20 : 16,
+                fontWeight: index == initialIndex ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          );
+        }),
+      ),
+    );
   }
 }
