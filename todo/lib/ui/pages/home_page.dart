@@ -277,6 +277,37 @@ class _HomePageState extends State<HomePage> {
         if (_taskController.taskList.isEmpty) {
           return _noTaskMsg();
         } else {
+          // 获取当前选中日期的任务列表
+          final tasksForSelectedDate = _taskController.taskList.where((task) {
+            // 检查任务是否应该在选定日期显示
+            bool shouldShow = false;
+            
+            if (task.repeat == 'Daily') {
+              shouldShow = true;
+            } else if (task.repeat == 'Weekly') {
+              shouldShow = _selectedDate
+                  .difference(DateFormat.yMd().parse(task.date!))
+                  .inDays %
+                  7 ==
+                  0;
+            } else if (task.repeat == 'Monthly') {
+              shouldShow = DateFormat.yMd().parse(task.date!).day ==
+                  _selectedDate.day;
+            } else {
+              // 对于不重复的任务，只在确切日期显示
+              var taskDate = DateFormat.yMd().parse(task.date!);
+              shouldShow = taskDate.year == _selectedDate.year &&
+                      taskDate.month == _selectedDate.month &&
+                      taskDate.day == _selectedDate.day;
+            }
+            
+            return shouldShow;
+          }).toList();
+          
+          if (tasksForSelectedDate.isEmpty) {
+            return _noTaskMsg();
+          }
+          
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             child: RefreshIndicator(
@@ -284,73 +315,185 @@ class _HomePageState extends State<HomePage> {
               backgroundColor: darkGreyClr,
               color: primaryClr,
               child: ListView.builder(
-                padding: const EdgeInsets.only(top: 5),
+                padding: const EdgeInsets.only(top: 15, bottom: 10),
                 scrollDirection: SizeConfig.orientation == Orientation.landscape
                     ? Axis.horizontal
                     : Axis.vertical,
                 physics: const BouncingScrollPhysics(),
                 itemBuilder: (BuildContext context, int index) {
-                  var task = _taskController.taskList[index];
+                  var task = tasksForSelectedDate[index];
+                  
+                  try {
+                    var date = DateFormat('hh:mm a').parse(task.startTime!.trim());
+                    var myTime = DateFormat('HH:mm').format(date);
 
-                  // Check if task should be shown based on date and repeat settings
-                  bool shouldShow = false;
-
-                  if (task.repeat == 'Daily') {
-                    shouldShow = true;
-                  } else if (task.repeat == 'Weekly') {
-                    shouldShow = _selectedDate
-                        .difference(DateFormat.yMd().parse(task.date!))
-                        .inDays %
-                        7 ==
-                        0;
-                  } else if (task.repeat == 'Monthly') {
-                    shouldShow = DateFormat.yMd().parse(task.date!).day ==
-                        _selectedDate.day;
-                  } else {
-                    // For non-repeating tasks, only show on the exact date
-                    var taskDate = DateFormat.yMd().parse(task.date!);
-                    shouldShow = taskDate.year == _selectedDate.year &&
-                              taskDate.month == _selectedDate.month &&
-                              taskDate.day == _selectedDate.day;
+                    notifyHelper.scheduledNotification(
+                      int.parse(myTime.toString().split(':')[0]),
+                      int.parse(myTime.toString().split(':')[1]),
+                      task,
+                    );
+                  } catch (e) {
+                    print('Error parsing time: $e');
                   }
 
-                  if (shouldShow) {
-                    try {
-                      var date = DateFormat('hh:mm a').parse(task.startTime!.trim());
-                      var myTime = DateFormat('HH:mm').format(date);
-
-                      notifyHelper.scheduledNotification(
-                        int.parse(myTime.toString().split(':')[0]),
-                        int.parse(myTime.toString().split(':')[1]),
-                        task,
-                      );
-                    } catch (e) {
-                      print('Error parsing time: $e');
-                    }
-
-                    return AnimationConfiguration.staggeredList(
-                      position: index,
-                      duration: const Duration(milliseconds: 1375),
-                      child: SlideAnimation(
-                        horizontalOffset: 300,
-                        child: FadeInAnimation(
-                          child: GestureDetector(
-                            onTap: () => _showBottomSheet(context, task),
-                            child: TaskTile(task),
-                          ),
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 1375),
+                    child: SlideAnimation(
+                      horizontalOffset: 300,
+                      child: FadeInAnimation(
+                        child: GestureDetector(
+                          onTap: () => _showBottomSheet(context, task),
+                          child: _buildTimelineTask(task, index),
                         ),
                       ),
-                    );
-                  }
-                  return Container(); // Return empty container for tasks that shouldn't be shown
+                    ),
+                  );
                 },
-                itemCount: _taskController.taskList.length,
+                itemCount: tasksForSelectedDate.length,
               ),
             ),
           );
         }
       }),
     );
+  }
+
+  Widget _buildTimelineTask(Task task, int index) {
+    // 计算任务持续时间
+    var startTime = DateFormat('hh:mm a').parse(task.startTime!.trim());
+    var endTime = DateFormat('hh:mm a').parse(task.endTime!.trim());
+    final duration = endTime.difference(startTime);
+    final durationMinutes = duration.inMinutes;
+    final timeRange = '${task.startTime}-${task.endTime} (${durationMinutes} mins)';
+    
+    // 获取用于图标的颜色
+    final bgColor = _getBGClr(task.color ?? 0);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          // 左侧时间轴
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                task.startTime!.split(' ')[0], // 只显示时间，不显示AM/PM
+                style: GoogleFonts.lato(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Container(
+                height: 80,
+                width: 0.8,
+                color: Colors.grey[700],
+              ),
+            ],
+          ),
+          const SizedBox(width: 15),
+          // 任务图标
+          Column(
+            children: [
+              Container(
+                height: 60,
+                width: 60,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    task.title![0].toUpperCase(), // 显示任务名称的首字母
+                    style: GoogleFonts.lato(
+                      fontSize: 22,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 15),
+          // 任务详情
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  timeRange,
+                  style: GoogleFonts.lato(
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  task.title!,
+                  style: GoogleFonts.lato(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                task.note!.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Text(
+                          task.note!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.lato(
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      )
+                    : Container(),
+              ],
+            ),
+          ),
+          // 右侧状态指示器
+          Container(
+            height: 20,
+            width: 20,
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: task.isCompleted == 1 ? Colors.green : bgColor,
+                width: 2,
+              ),
+            ),
+            child: task.isCompleted == 1
+                ? const Icon(
+                    Icons.check,
+                    color: Colors.green,
+                    size: 12,
+                  )
+                : Container(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getBGClr(int no) {
+    switch (no) {
+      case 0:
+        return bluishClr;
+      case 1:
+        return pinkClr;
+      case 2:
+        return orangeClr;
+      default:
+        return bluishClr;
+    }
   }
 
   _noTaskMsg() {
@@ -444,8 +587,8 @@ class _HomePageState extends State<HomePage> {
                 ? SizeConfig.screenHeight * 0.6
                 : SizeConfig.screenHeight * 0.8)
             : (task.isCompleted == 1
-                ? SizeConfig.screenHeight * 0.30
-                : SizeConfig.screenHeight * 0.39),
+                ? SizeConfig.screenHeight * 0.25
+                : SizeConfig.screenHeight * 0.32),
         color: darkGreyClr,
         child: Column(
           children: [
@@ -494,16 +637,6 @@ class _HomePageState extends State<HomePage> {
               icon: Icons.delete,
             ),
             const SizedBox(height: 10),
-            _buildBottomSheetButton(
-              label: 'Close',
-              onTap: () {
-                Get.back();
-              },
-              clr: Colors.white,
-              isClose: true,
-              icon: Icons.close,
-            ),
-            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -514,7 +647,6 @@ class _HomePageState extends State<HomePage> {
     required String label,
     required Function() onTap,
     required Color clr,
-    bool isClose = false,
     required IconData icon,
   }) {
     return GestureDetector(
@@ -525,12 +657,10 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           border: Border.all(
             width: 2,
-            color: isClose
-                ? Colors.grey[600]!
-                : clr,
+            color: clr,
           ),
           borderRadius: BorderRadius.circular(20),
-          color: isClose ? Colors.transparent : clr,
+          color: Colors.transparent,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -538,15 +668,15 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(width: 20),
             Icon(
               icon,
-              color: isClose ? Colors.grey[400] : Colors.white,
+              color: Colors.white,
               size: 24,
             ),
             const SizedBox(width: 20),
             Text(
               label,
               style: GoogleFonts.lato(
-                textStyle: TextStyle(
-                  color: isClose ? Colors.grey[400] : Colors.white,
+                textStyle: const TextStyle(
+                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
