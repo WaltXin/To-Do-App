@@ -24,6 +24,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late NotifyHelper notifyHelper;
+  bool _showVoiceButton = false;
+  bool _isRecording = false;
 
   @override
   void initState() {
@@ -35,8 +37,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   DateTime _selectedDate = DateTime.now();
-  final TaskController _taskController = Get.put(TaskController());
   int _weekOffset = 0;
+  final TaskController _taskController = Get.put(TaskController());
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +46,16 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: darkGreyClr,
       appBar: _customAppBar(),
-      body: Column(
+      body: Stack(
         children: [
-          _addTaskBar(),
-          _addDateBar(),
-          _showTasks(),
+          Column(
+            children: [
+              _addTaskBar(),
+              _addDateBar(),
+              _showTasks(),
+            ],
+          ),
+          if (_showVoiceButton) _buildVoiceButtonOverlay(),
         ],
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
@@ -772,21 +779,29 @@ class _HomePageState extends State<HomePage> {
               icon: Icons.timeline,
               label: 'Timeline',
               onTap: () {
-                // Already on HomePage/Timeline, no action needed
+                setState(() {
+                  _showVoiceButton = false;
+                });
               },
-              isActive: true,
+              isActive: !_showVoiceButton,
             ),
             _buildNavButton(
               icon: Icons.mic,
-              label: 'Voice AI',
+              label: 'Voice',
               onTap: () {
-                // Voice functionality can be added here
+                setState(() {
+                  _showVoiceButton = !_showVoiceButton;
+                });
               },
+              isActive: _showVoiceButton,
             ),
             _buildNavButton(
               icon: Icons.settings,
               label: 'Setting',
               onTap: () {
+                setState(() {
+                  _showVoiceButton = false;
+                });
                 // Settings functionality can be added here
               },
             ),
@@ -794,6 +809,9 @@ class _HomePageState extends State<HomePage> {
               icon: Icons.add_circle,
               label: '',
               onTap: () async {
+                setState(() {
+                  _showVoiceButton = false;
+                });
                 await Get.to(() => AddTaskPage(initialDate: _selectedDate));
                 _taskController.getTasks();
               },
@@ -1069,6 +1087,107 @@ class _HomePageState extends State<HomePage> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: dateWidgets,
+    );
+  }
+
+  Widget _buildVoiceButtonOverlay() {
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          // 半透明背景，点击时关闭浮层
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _showVoiceButton = false;
+              });
+            },
+            child: Container(
+              color: Colors.black54,
+            ),
+          ),
+          // 录音按钮定位在底部
+          Positioned(
+            bottom: 60, // 调整为100像素，位于底部导航栏上方
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: (){ /* 防止关闭弹窗 */ },
+                    onLongPressStart: (_) {
+                      setState(() {
+                        _isRecording = true;
+                      });
+                    },
+                    onLongPressEnd: (_) {
+                      setState(() {
+                        _isRecording = false;
+                        _showVoiceButton = false; // 松开后关闭整个浮层
+                      });
+                    },
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: primaryClr,
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryClr.withOpacity(0.5),
+                            spreadRadius: _isRecording ? 10 : 0,
+                            blurRadius: _isRecording ? 15 : 0,
+                            offset: const Offset(0, 0),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.mic,
+                        color: Colors.white,
+                        size: _isRecording ? 50 : 40,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Text(
+                    "Hold to Talk",
+                    style: GoogleFonts.lato(
+                      textStyle: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (_isRecording) 
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: _buildRecordingWaves(),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecordingWaves() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          height: 10.0 + (index * 5),
+          width: 6,
+          decoration: BoxDecoration(
+            color: primaryClr,
+            borderRadius: BorderRadius.circular(5),
+          ),
+        );
+      }),
     );
   }
 }
