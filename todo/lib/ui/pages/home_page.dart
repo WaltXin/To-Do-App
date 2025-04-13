@@ -369,6 +369,9 @@ class _HomePageState extends State<HomePage> {
     
     // 获取用于图标的颜色
     final bgColor = _getBGClr(task.color ?? 0);
+
+    // 检查任务是否与其他任务重叠
+    bool isOverlapping = _checkIfTaskOverlapping(task);
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -389,7 +392,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 5),
               Container(
-                height: 80,
+                height: isOverlapping ? 110 : 80,
                 width: 0.8,
                 color: Colors.grey[700],
               ),
@@ -398,6 +401,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 15),
           // 任务图标
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 height: 60,
@@ -417,6 +421,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
+              if (isOverlapping)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, left: 5),
+                  child: Text(
+                    'Tasks are overlapping',
+                    style: GoogleFonts.lato(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red[400],
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(width: 15),
@@ -481,6 +497,51 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  // 检查任务是否与其他任务重叠
+  bool _checkIfTaskOverlapping(Task task) {
+    // 获取当前选中日期的所有任务
+    final tasksForSelectedDate = _taskController.taskList.where((t) {
+      var taskDate = DateFormat.yMd().parse(t.date!);
+      var selectedDate = DateFormat.yMd().parse(task.date!);
+      return taskDate.year == selectedDate.year &&
+             taskDate.month == selectedDate.month &&
+             taskDate.day == selectedDate.day;
+    }).toList();
+    
+    // 如果只有一个任务，则不存在重叠
+    if (tasksForSelectedDate.length <= 1) {
+      return false;
+    }
+    
+    try {
+      // 解析当前任务的开始和结束时间
+      final DateFormat timeFormat = DateFormat('hh:mm a');
+      final DateTime currentStart = timeFormat.parse(task.startTime!);
+      final DateTime currentEnd = timeFormat.parse(task.endTime!);
+      
+      // 检查是否与其他任务重叠
+      for (var otherTask in tasksForSelectedDate) {
+        // 跳过当前任务自身
+        if (otherTask.id == task.id) {
+          continue;
+        }
+        
+        final DateTime otherStart = timeFormat.parse(otherTask.startTime!);
+        final DateTime otherEnd = timeFormat.parse(otherTask.endTime!);
+        
+        // 检查时间是否重叠
+        // 重叠条件：一个任务的开始时间早于另一个任务的结束时间，且结束时间晚于另一个任务的开始时间
+        if (currentStart.isBefore(otherEnd) && currentEnd.isAfter(otherStart)) {
+          return true;
+        }
+      }
+    } catch (e) {
+      print('Error checking task overlap: $e');
+    }
+    
+    return false;
   }
 
   Color _getBGClr(int no) {
