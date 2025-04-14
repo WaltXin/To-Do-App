@@ -518,7 +518,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           dialHandColor: _colorList[_selectedColor],
           dialBackgroundColor: Colors.grey[800],
           dialTextColor: Colors.white,
-        ), dialogTheme: DialogThemeData(backgroundColor: Colors.black87),
+        ), dialogTheme: const DialogThemeData(backgroundColor: Colors.black87),
       ),
       child: Scaffold(
         backgroundColor: darkGreyClr,

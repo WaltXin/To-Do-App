@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
+import 'dart:io' show Platform;
 
 import '../models/task.dart';
 
@@ -14,11 +15,11 @@ class DBHelper {
       return;
     }
     try {
-      String path = '${await getDatabasesPath()}task.db';
-      debugPrint('in db path');
+      String path = '${await getDatabasesPath()}${Platform.pathSeparator}task.db';
+      debugPrint('in db path: $path');
       _db = await openDatabase(path, version: _version,
           onCreate: (Database db, int version) async {
-        debugPrint('Creating new one');
+        debugPrint('Creating new database');
         // When creating the db, create the table
         return db.execute('CREATE TABLE $_tableName ('
             'id INTEGER PRIMARY KEY AUTOINCREMENT, '
@@ -28,58 +29,105 @@ class DBHelper {
             'color INTEGER, '
             'isCompleted INTEGER)');
       });
-      print('DB Created');
+      print('DB Created successfully');
     } catch (e) {
-      print(e);
+      print('Error initializing database: $e');
     }
   }
 
+  // Helper method to ensure database is initialized
+  static Future<Database> _getDatabase() async {
+    if (_db == null) {
+      print('Database was null, initializing now');
+      await initDb();
+      if (_db == null) {
+        throw Exception('Failed to initialize database');
+      }
+    }
+    return _db!;
+  }
+
   static Future<int> insert(Task? task) async {
-    print('insert function called');
+    print('Insert function called');
     try {
-      return await _db!.insert(_tableName, task!.toJson());
+      if (task == null) {
+        print('Task is null, cannot insert');
+        return -1;
+      }
+      
+      final db = await _getDatabase();
+      final result = await db.insert(_tableName, task.toJson());
+      print('Task inserted successfully with id: $result');
+      return result;
     } catch (e) {
-      print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-      return 9000;
+      print('Error inserting task: $e');
+      return -1;
     }
   }
 
   static Future<int> delete(Task task) async {
-    print('insert');
-    return await _db!.delete(
-      _tableName,
-      where: 'id = ?',
-      whereArgs: [task.id],
-    );
+    try {
+      final db = await _getDatabase();
+      return await db.delete(
+        _tableName,
+        where: 'id = ?',
+        whereArgs: [task.id],
+      );
+    } catch (e) {
+      print('Error deleting task: $e');
+      return -1;
+    }
   }
 
   static Future<int> deleteAll() async {
-    print('insert');
-    return await _db!.delete(_tableName);
+    try {
+      final db = await _getDatabase();
+      return await db.delete(_tableName);
+    } catch (e) {
+      print('Error deleting all tasks: $e');
+      return -1;
+    }
   }
 
   static Future<List<Map<String, dynamic>>> query() async {
-    print('Query Called!!!!!!!!!!!!!!!!!!!');
-    print('insert');
-    return await _db!.query(_tableName);
+    print('Query called');
+    try {
+      final db = await _getDatabase();
+      final result = await db.query(_tableName);
+      print('Query successful, found ${result.length} tasks');
+      return result;
+    } catch (e) {
+      print('Error querying tasks: $e');
+      return [];
+    }
   }
 
   static Future<int> update(int id) async {
-    print('insert');
-    return await _db!.rawUpdate('''
-    UPDATE tasks
-    SET isCompleted = ?
-    WHERE id = ?
-    ''', [1, id]);
+    try {
+      final db = await _getDatabase();
+      return await db.rawUpdate('''
+      UPDATE tasks
+      SET isCompleted = ?
+      WHERE id = ?
+      ''', [1, id]);
+    } catch (e) {
+      print('Error updating task completion status: $e');
+      return -1;
+    }
   }
 
   static Future<int> updateTask(Task task) async {
-    print('update task');
-    return await _db!.update(
-      _tableName,
-      task.toJson(),
-      where: 'id = ?',
-      whereArgs: [task.id],
-    );
+    try {
+      final db = await _getDatabase();
+      return await db.update(
+        _tableName,
+        task.toJson(),
+        where: 'id = ?',
+        whereArgs: [task.id],
+      );
+    } catch (e) {
+      print('Error updating task: $e');
+      return -1;
+    }
   }
 }

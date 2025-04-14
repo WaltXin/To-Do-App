@@ -6,16 +6,27 @@ import 'package:todo/ui/theme.dart';
 
 import 'db/db_helper.dart';
 
-//future
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DBHelper.initDb();
-  await GetStorage.init();
   
-  // Force dark mode
-  Get.changeThemeMode(ThemeMode.dark);
-  
-  runApp(const MyApp());
+  try {
+    print('Initializing database...');
+    await DBHelper.initDb();
+    print('Database initialized successfully');
+    
+    print('Initializing GetStorage...');
+    await GetStorage.init();
+    print('GetStorage initialized successfully');
+    
+    // Force dark mode
+    Get.changeThemeMode(ThemeMode.dark);
+    
+    runApp(const MyApp());
+  } catch (e) {
+    print('Error during app initialization: $e');
+    // Still run the app, but it will handle the error state
+    runApp(const MyApp());
+  }
 }
 
 class MyApp extends StatelessWidget {
