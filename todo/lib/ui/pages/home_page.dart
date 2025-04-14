@@ -1,14 +1,10 @@
-import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:todo/services/theme_services.dart';
 import 'package:todo/ui/pages/add_task_page.dart';
-import 'package:todo/ui/widgets/button.dart';
-import 'package:todo/ui/widgets/task_tile.dart';
 import '../../controllers/task_controller.dart';
 import '../../models/task.dart';
 import '../../services/notification_services.dart';
@@ -372,7 +368,7 @@ class _HomePageState extends State<HomePage> {
     var endTime = DateFormat('hh:mm a').parse(task.endTime!.trim());
     final duration = endTime.difference(startTime);
     final durationMinutes = duration.inMinutes;
-    final timeRange = '${task.startTime}-${task.endTime} (${durationMinutes} mins)';
+    final timeRange = '${task.startTime}-${task.endTime} ($durationMinutes mins)';
     
     // 获取用于图标的颜色
     final bgColor = _getBGClr(task.color ?? 0);
@@ -554,11 +550,19 @@ class _HomePageState extends State<HomePage> {
   Color _getBGClr(int no) {
     switch (no) {
       case 0:
-        return bluishClr;
+        return const Color(0xFFFF9AA2); // Pink
       case 1:
-        return pinkClr;
+        return Colors.orange;
       case 2:
-        return orangeClr;
+        return Colors.yellow;
+      case 3:
+        return Colors.green;
+      case 4:
+        return Colors.blue;
+      case 5:
+        return Colors.teal;
+      case 6:
+        return Colors.purple;
       default:
         return bluishClr;
     }
@@ -579,7 +583,7 @@ class _HomePageState extends State<HomePage> {
             child: SvgPicture.asset(
               'images/task.svg',
               // ignore: deprecated_member_use
-              color: primaryClr.withOpacity(0.7),
+              color: primaryClr.withAlpha(179),
               height: 70,
               semanticsLabel: 'Task',
             ),
@@ -763,7 +767,7 @@ class _HomePageState extends State<HomePage> {
           color: darkGreyClr,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withAlpha(51),
               spreadRadius: 0,
               blurRadius: 10,
               offset: const Offset(0, -3),
@@ -839,7 +843,7 @@ class _HomePageState extends State<HomePage> {
             width: isMain ? 45 : 35,
             height: isMain ? 45 : 35,
             decoration: BoxDecoration(
-              color: isMain ? primaryClr : isActive ? primaryClr.withOpacity(0.1) : Colors.transparent,
+              color: isMain ? primaryClr : isActive ? primaryClr.withAlpha(26) : Colors.transparent,
               borderRadius: BorderRadius.circular(isMain ? 22.5 : 8),
             ),
             child: Icon(
@@ -878,9 +882,9 @@ class _HomePageState extends State<HomePage> {
       builder: (BuildContext context) {
         return Container(
           height: 420,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: darkGreyClr,
-            borderRadius: const BorderRadius.only(
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(25),
               topRight: Radius.circular(25),
             ),
@@ -1076,9 +1080,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
     
-    // 计算行数
-    int rowCount = (firstWeekday + daysInMonth) ~/ 7;
-    if ((firstWeekday + daysInMonth) % 7 != 0) rowCount++;
     
     // 创建网格布局
     return GridView.count(
@@ -1135,7 +1136,7 @@ class _HomePageState extends State<HomePage> {
                         color: primaryClr,
                         boxShadow: [
                           BoxShadow(
-                            color: primaryClr.withOpacity(0.5),
+                            color: primaryClr.withAlpha(128),
                             spreadRadius: _isRecording ? 10 : 0,
                             blurRadius: _isRecording ? 15 : 0,
                             offset: const Offset(0, 0),
@@ -1151,7 +1152,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 15),
                   Text(
-                    "Hold to Talk",
+                    'Hold to Talk',
                     style: GoogleFonts.lato(
                       textStyle: const TextStyle(
                         color: Colors.white,

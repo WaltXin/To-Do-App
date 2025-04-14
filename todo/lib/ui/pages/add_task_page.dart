@@ -49,8 +49,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
   // Add a variable to keep track of the selected time slot
   int _selectedTimeIndex = -1;
 
-  // Add a variable to track time range display format
-  bool _showTimeRange = false;
 
   @override
   void initState() {
@@ -67,7 +65,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
       
       // 编辑任务时，设置选中状态以便正确显示时间框
       _selectedTimeIndex = 0; // 默认选中第一个时间框
-      _showTimeRange = true;
     } else {
       _selectedDate = widget.initialDate ?? DateTime.now();
       _startTime = DateFormat('hh:mm a').format(DateTime.now()).toString();
@@ -84,38 +81,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
     _currentMonth = DateFormat('MMMM yyyy').format(_selectedDate);
   }
 
-  // Add this method to calculate end time based on start time and duration
-  void _updateEndTime() {
-    // Parse the start time
-    final DateFormat format = DateFormat('hh:mm a');
-    final DateTime startDateTime = format.parse(_startTime);
-    
-    // Add the selected duration to get the end time
-    final DateTime endDateTime = startDateTime.add(Duration(minutes: _selectedRemind));
-    
-    // Format the end time
-    _endTime = DateFormat('hh:mm a').format(endDateTime);
-  }
-  
-  // Add this method to get formatted time range
-  String _getTimeRange() {
-    // Extract just time without AM/PM for start time
-    String start = _startTime.split(' ')[0];
-    
-    // Extract time and period for end time
-    List<String> endParts = _endTime.split(' ');
-    String end = endParts[0];
-    String period = endParts[1];
-    
-    // If start and end have same period (AM/PM), only show it once at the end
-    if (_startTime.contains(period)) {
-      return '$start–$end $period';
-    } else {
-      // If periods are different, show both
-      String startPeriod = _startTime.split(' ')[1];
-      return '$start $startPeriod–$end $period';
-    }
-  }
 
   // 添加方法用于计算任务持续时间（分钟）
   int _calculateDurationInMinutes() {
@@ -134,7 +99,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     final completer = Completer<bool>();
     
     // Use a variable to track which is currently being edited (start time or end time)
-    bool _editingStartTime = isStartTime;
+    bool editingStartTime = isStartTime;
     
     // 创建控制器供滚轮使用
     FixedExtentScrollController? hourController;
@@ -172,8 +137,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
           builder: (context, setState) {
             // Parse the current selected time
             final DateFormat format = DateFormat('hh:mm a');
-            DateTime selectedStartTime = format.parse(_startTime);
-            DateTime selectedEndTime = format.parse(_endTime);
             
             // Calculate task duration
             int durationMinutes = _calculateDurationInMinutes();
@@ -200,7 +163,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5), // Reduce vertical padding
                     child: Text(
-                      "This task takes $durationMinutes mins.",
+                      'This task takes $durationMinutes mins.',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 22, // Reduce font size
@@ -219,7 +182,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           onTap: () {
                             // 先设置状态为编辑开始时间
                             setState(() {
-                              _editingStartTime = true;
+                              editingStartTime = true;
                             });
                             
                             // 一定要先释放旧的控制器
@@ -258,7 +221,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8), // Reduce padding
                             decoration: BoxDecoration(
-                              color: _editingStartTime ? _colorList[_selectedColor] : Colors.grey[800],
+                              color: editingStartTime ? _colorList[_selectedColor] : Colors.grey[800],
                               borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(15),
                                 bottomLeft: Radius.circular(15),
@@ -267,9 +230,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                             child: Column(
                               children: [
                                 Text(
-                                  "Start",
+                                  'Start',
                                   style: TextStyle(
-                                    color: _editingStartTime ? Colors.white : Colors.grey[400],
+                                    color: editingStartTime ? Colors.white : Colors.grey[400],
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -278,7 +241,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                 Text(
                                   _startTime,
                                   style: TextStyle(
-                                    color: _editingStartTime ? Colors.white : Colors.grey[400],
+                                    color: editingStartTime ? Colors.white : Colors.grey[400],
                                     fontSize: 16,
                                   ),
                                 ),
@@ -294,7 +257,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           onTap: () {
                             // 先设置状态为编辑结束时间
                             setState(() {
-                              _editingStartTime = false;
+                              editingStartTime = false;
                             });
                             
                             // 一定要先释放旧的控制器
@@ -333,7 +296,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8), // Reduce padding
                             decoration: BoxDecoration(
-                              color: !_editingStartTime ? _colorList[_selectedColor] : Colors.grey[800],
+                              color: !editingStartTime ? _colorList[_selectedColor] : Colors.grey[800],
                               borderRadius: const BorderRadius.only(
                                 topRight: Radius.circular(15),
                                 bottomRight: Radius.circular(15),
@@ -342,9 +305,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                             child: Column(
                               children: [
                                 Text(
-                                  "End",
+                                  'End',
                                   style: TextStyle(
-                                    color: !_editingStartTime ? Colors.white : Colors.grey[400],
+                                    color: !editingStartTime ? Colors.white : Colors.grey[400],
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -353,7 +316,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                 Text(
                                   _endTime,
                                   style: TextStyle(
-                                    color: !_editingStartTime ? Colors.white : Colors.grey[400],
+                                    color: !editingStartTime ? Colors.white : Colors.grey[400],
                                     fontSize: 16,
                                   ),
                                 ),
@@ -368,9 +331,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   const SizedBox(height: 10), // Reduce spacing
                   
                   // Time picker
-                  Container(
+                  SizedBox(
                     height: 130, // Reduce height
-                    child: _editingStartTime 
+                    child: editingStartTime 
                       ? _buildTimeWheelPicker(
                           format.parse(_startTime),
                           true, // 标记这是开始时间选择器
@@ -448,10 +411,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         color: _colorList[_selectedColor],
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: Center(
+                      child: const Center(
                         child: Text(
-                          "Confirm",
-                          style: const TextStyle(
+                          'Confirm',
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -472,8 +435,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         children: [
                           Icon(Icons.nightlight_round, color: Colors.blue[400], size: 18),
                           const SizedBox(width: 5),
-                          Text(
-                            "Ends after midnight",
+                          const Text(
+                            'Ends after midnight',
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 16,
@@ -487,7 +450,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "+1",
+                              '+1',
                               style: TextStyle(
                                 color: Colors.blue[400],
                                 fontSize: 12,
@@ -548,7 +511,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-        dialogBackgroundColor: Colors.black87,
         timePickerTheme: TimePickerThemeData(
           backgroundColor: Colors.black87,
           hourMinuteTextColor: Colors.white,
@@ -556,7 +518,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           dialHandColor: _colorList[_selectedColor],
           dialBackgroundColor: Colors.grey[800],
           dialTextColor: Colors.white,
-        ),
+        ), dialogTheme: DialogThemeData(backgroundColor: Colors.black87),
       ),
       child: Scaffold(
         backgroundColor: darkGreyClr,
@@ -621,22 +583,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       final time = DateTime(now.year, now.month, now.day, 16, 15 + index * 15);
                       final timeString = DateFormat('hh:mm a').format(time);
                       
-                      // Calculate end time based on selected duration
-                      final endTime = time.add(Duration(minutes: _selectedRemind));
-                      final endTimeString = DateFormat('hh:mm a').format(endTime);
-                      
-                      // Format time range display
-                      String timeRange = '';
-                      String startTimeOnly = timeString.split(' ')[0];
-                      String endTimeOnly = endTimeString.split(' ')[0];
-                      
-                      // Check if start and end times have the same period (AM/PM)
-                      if (timeString.split(' ')[1] == endTimeString.split(' ')[1]) {
-                        timeRange = '$startTimeOnly–$endTimeOnly ${timeString.split(' ')[1]}';
-                      } else {
-                        timeRange = '$startTimeOnly ${timeString.split(' ')[1]}–$endTimeOnly ${endTimeString.split(' ')[1]}';
-                      }
-                      
+
                       // 在编辑任务模式下，检查是否匹配现有任务时间
                       bool isTaskTime = widget.task != null && _selectedTimeIndex == 0 && index == 0;
                       
@@ -661,7 +608,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                 // Calculate end time
                                 final endTime = time.add(Duration(minutes: _selectedRemind));
                                 _endTime = DateFormat('hh:mm a').format(endTime);
-                                _showTimeRange = true;
                               }
                               
                               // Show time picker dialog, and restore previous time on cancel
@@ -806,11 +752,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         ),
                         
                         // Weekday headers
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 10),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 10, bottom: 10),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: const [
+                            children: [
                               Text('SUN', style: TextStyle(color: Colors.grey, fontSize: 12)),
                               Text('MON', style: TextStyle(color: Colors.grey, fontSize: 12)),
                               Text('TUE', style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -868,7 +814,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                             color: isSelected 
                                               ? (_selectedRemind == duration 
                                                   ? _colorList[_selectedColor] 
-                                                  : _colorList[_selectedColor].withOpacity(0.5))
+                                                  : _colorList[_selectedColor].withAlpha(128))
                                               : Colors.grey[800],
                                           ),
                                         ),
@@ -886,7 +832,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                     if (duration == 1) {
                                       label = '1';
                                     } else if (duration < 60) {
-                                      label = isSelected ? '${duration}min' : '${duration}';
+                                      label = isSelected ? '${duration}min' : '$duration';
                                     } else if (duration == 60) {
                                       label = isSelected ? '1h' : '1';
                                     } else {
@@ -1170,7 +1116,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   Widget _buildTimeWheelPicker(DateTime initialTime, bool isStartTime, Function(DateTime) onTimeSelected) {
     // 通过添加不同的Key，强制在每次initialTime变化时完全重建选择器
-    return Container(
+    return SizedBox(
       key: ValueKey(initialTime.toString()),
       height: 130,
       child: Row(
@@ -1189,7 +1135,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           
           // Separator
           Text(
-            ":",
+            ':',
             style: TextStyle(
               color: _colorList[_selectedColor],
               fontSize: 30,
@@ -1242,7 +1188,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       initialIndex = hour12 - 1; // 转换为0-11的索引
     } else if (isPeriod) {
       // AM/PM
-      items = ["AM", "PM"];
+      items = ['AM', 'PM'];
       initialIndex = initialTime.hour >= 12 ? 1 : 0;
     } else {
       // 分钟 (00-59)
@@ -1253,7 +1199,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     // 滚轮滚动控制器
     final controller = FixedExtentScrollController(initialItem: initialIndex);
     
-    return Container(
+    return SizedBox(
       height: 130,
       child: ListWheelScrollView(
         controller: controller,
