@@ -62,12 +62,15 @@ Follow these instructions to get the project up and running on your local machin
 6. Run in real device:
    for debug
    ```bash
+   open ios/Runner.xcworkspace
    flutter devices
    flutter run -d <device-id>
    ```
 
    for real build
    ```bash
+   open ios/Runner.xcworkspace
    flutter build ios
    ```
+   In xcode, set the runner to debug(won't work if disconnect) or release(will work even disconnect)
 
