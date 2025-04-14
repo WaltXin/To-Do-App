@@ -52,9 +52,22 @@ Follow these instructions to get the project up and running on your local machin
    ```
 
 
-4. Run the app:
+5. Run the app:
 
    ```bash
-   flutter run
+   flutter devices
+   flutter run -d <device_id>
+   ```
+
+6. Run in real device:
+   for debug
+   ```bash
+   flutter devices
+   flutter run -d <device-id>
+   ```
+
+   for real build
+   ```bash
+   flutter build ios
    ```
 
