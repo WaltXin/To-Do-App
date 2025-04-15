@@ -398,8 +398,8 @@ class _HomePageState extends State<HomePage> {
     // 格式化时间显示
     final String formattedDuration = _formatDuration(durationMinutes);
     final String timeRange = isOvernight 
-        ? '${task.startTime}-${task.endTime} (${formattedDuration})'
-        : '${task.startTime}-${task.endTime} (${formattedDuration})';
+        ? '${task.startTime}-${task.endTime} ($formattedDuration)'
+        : '${task.startTime}-${task.endTime} ($formattedDuration)';
     
     // 获取用于图标的颜色
     final bgColor = _getBGClr(task.color ?? 0);
@@ -600,19 +600,19 @@ class _HomePageState extends State<HomePage> {
   Color _getBGClr(int no) {
     switch (no) {
       case 0:
-        return const Color(0xFFFF9AA2); // Pink
+        return Colors.green; // Green (default)
       case 1:
-        return Colors.orange;
-      case 2:
-        return Colors.yellow;
-      case 3:
-        return Colors.green;
-      case 4:
         return Colors.blue;
-      case 5:
+      case 2:
         return Colors.teal;
-      case 6:
+      case 3:
         return Colors.purple;
+      case 4:
+        return const Color(0xFFFF9AA2); // Pink
+      case 5:
+        return Colors.orange;
+      case 6:
+        return Colors.yellow;
       default:
         return bluishClr;
     }

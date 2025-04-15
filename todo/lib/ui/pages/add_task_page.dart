@@ -32,13 +32,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
   int _selectedColor = 0;
   
   final List<Color> _colorList = [
-    const Color(0xFFFF9AA2), // Pink
-    Colors.orange,
-    Colors.yellow,
-    Colors.green,
+    Colors.green, // Green (default)
     Colors.blue,
     Colors.teal,
     Colors.purple,
+    const Color(0xFFFF9AA2), // Pink
+    Colors.orange,
+    Colors.yellow,
   ];
 
   final List<int> _durationOptions = [15, 30, 45, 60, 90]; // in minutes
@@ -706,13 +706,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   child: TextField(
                     controller: _titleController,
                     style: const TextStyle(color: Colors.white),
+                    cursorColor: _colorList[_selectedColor],
+                    cursorWidth: 3.0, // 使用更粗的光标
+                    cursorRadius: const Radius.circular(2.0),
+                    showCursor: true, // 确保光标始终可见
+                    autofocus: true, // 在页面加载时自动获得焦点
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       prefixIcon: Icon(
                         Icons.task_alt,
                         color: _colorList[_selectedColor],
                       ),
-                      hintText: 'Did',
+                      hintText: '', // 移除"Did"占位文本
                       hintStyle: TextStyle(color: Colors.grey[400]),
                       contentPadding: const EdgeInsets.all(20),
                     ),
