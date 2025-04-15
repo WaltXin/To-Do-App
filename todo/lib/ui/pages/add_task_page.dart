@@ -34,6 +34,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
   // 添加重复次数变量
   int _repeatCount = 1;
   
+  // 添加提醒时间变量
+  bool _hasAlert = false;
+  int _alertHours = 0;
+  int _alertMinutes = 30;
+  
   final List<Color> _colorList = [
     Colors.green, // Green (default)
     Colors.blue,
@@ -63,7 +68,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
       _selectedDate = DateFormat.yMd().parse(widget.task!.date!);
       _startTime = widget.task!.startTime!;
       _endTime = widget.task!.endTime!;
-      _selectedRemind = widget.task!.remind!;
+      
+      // 处理提醒设置
+      int remindMinutes = widget.task!.remind!;
+      if (remindMinutes > 0) {
+        _hasAlert = true;
+        _alertHours = remindMinutes ~/ 60;  // 整除，得到小时
+        _alertMinutes = remindMinutes % 60;  // 取余，得到分钟
+      } else {
+        _hasAlert = false;
+        _alertHours = 0;
+        _alertMinutes = 30; // 默认30分钟
+      }
       
       // 处理重复设置
       String repeatSetting = widget.task!.repeat!;
@@ -87,11 +103,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
       // Set end time 15 minutes after start time by default
       final endTime = DateTime.now().add(const Duration(minutes: 15));
       _endTime = DateFormat('hh:mm a').format(endTime);
-      // Set default selected remind to 15 minutes
-      _selectedRemind = 15;
       // 设置默认为不重复
       _selectedRepeat = 'None';
       _repeatCount = 1;
+      // 设置默认没有提醒
+      _hasAlert = false;
+      _alertHours = 0;
+      _alertMinutes = 30;
     }
     _updateCurrentMonth();
   }
@@ -986,6 +1004,119 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ),
                 const SizedBox(height: 20),
 
+                // Need Alerts Section
+                _buildSectionTitle('Need alerts?'),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      // 如果还没有设置提醒，显示添加按钮
+                      if (!_hasAlert)
+                        GestureDetector(
+                          onTap: () async {
+                            final result = await _showAlertPickerDialog();
+                            if (result) {
+                              setState(() {
+                                _hasAlert = true;
+                              });
+                            }
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[800],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.add_alert_outlined,
+                                    color: _colorList[_selectedColor],
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    'Add Alert',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      
+                      // 如果已经设置了提醒，显示提醒信息
+                      if (_hasAlert)
+                        GestureDetector(
+                          onTap: () async {
+                            // 点击整个区域进行编辑
+                            final result = await _showAlertPickerDialog();
+                            setState(() {});
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[800],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.notifications_active,
+                                        color: _colorList[_selectedColor],
+                                        size: 22,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Flexible(
+                                        child: Text(
+                                          _formatAlertTime(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // 只保留删除按钮
+                                IconButton(
+                                  padding: const EdgeInsets.all(8),
+                                  constraints: const BoxConstraints(),
+                                  icon: const Icon(Icons.delete_outline, color: Colors.white70, size: 20),
+                                  onPressed: () {
+                                    // 防止点击事件传递到父级
+                                    setState(() {
+                                      _hasAlert = false;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
                 // Repeat Option Section
                 _buildSectionTitle('How often?', showDate: true),
                 Container(
@@ -1214,7 +1345,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           startTime: _startTime,
           endTime: _endTime,
           color: _selectedColor,
-          remind: _selectedRemind,
+          remind: _hasAlert ? (_alertHours * 60 + _alertMinutes) : 0,
           repeat: _selectedRepeat == 'None' ? 'None' : "$_selectedRepeat:$_repeatCount",
         ),
       );
@@ -1235,7 +1366,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           startTime: _startTime,
           endTime: _endTime,
           color: _selectedColor,
-          remind: _selectedRemind,
+          remind: _hasAlert ? (_alertHours * 60 + _alertMinutes) : 0,
           repeat: _selectedRepeat == 'None' ? 'None' : "$_selectedRepeat:$_repeatCount",
         ),
       );
@@ -1409,5 +1540,244 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
     // 如果是1，就不显示数字
     return _repeatCount == 1 ? 'Every $unit' : 'Every $_repeatCount $unit';
+  }
+
+  // 格式化提醒时间显示
+  String _formatAlertTime() {
+    String timeText = '';
+    
+    if (_alertHours > 0) {
+      timeText += '${_alertHours} ${_alertHours == 1 ? 'hour' : 'hours'}';
+      if (_alertMinutes > 0) {
+        timeText += ' and ';
+      }
+    }
+    
+    if (_alertMinutes > 0 || timeText.isEmpty) {
+      timeText += '${_alertMinutes} ${_alertMinutes == 1 ? 'minute' : 'minutes'}';
+    }
+    
+    return 'Alert $timeText before';
+  }
+
+  // 显示提醒时间选择器对话框
+  Future<bool> _showAlertPickerDialog() {
+    // 创建一个Completer来处理异步结果
+    final completer = Completer<bool>();
+    
+    // 创建控制器供滚轮使用
+    final hourController = FixedExtentScrollController(initialItem: _alertHours);
+    final minuteController = FixedExtentScrollController(initialItem: _alertMinutes);
+    
+    // 保存临时值
+    int tempHours = _alertHours;
+    int tempMinutes = _alertMinutes;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: darkGreyClr,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: 400,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 顶部关闭按钮
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        completer.complete(false);
+                      },
+                    ),
+                  ),
+                  
+                  // 标题
+                  Text(
+                    'Alert before task starts',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // 时间选择器
+                  Container(
+                    height: 170,
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      children: [
+                        // 小时选择器
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Hours',
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Expanded(
+                                child: CupertinoPicker(
+                                  scrollController: hourController,
+                                  looping: false,
+                                  itemExtent: 40,
+                                  useMagnifier: true,
+                                  magnification: 1.2,
+                                  selectionOverlay: CupertinoPickerDefaultSelectionOverlay(
+                                    background: _colorList[_selectedColor].withOpacity(0.15),
+                                  ),
+                                  onSelectedItemChanged: (index) {
+                                    setState(() {
+                                      tempHours = index;
+                                    });
+                                  },
+                                  children: List.generate(7, (index) {
+                                    return Center(
+                                      child: Text(
+                                        '$index',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // 分钟选择器
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Minutes',
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Expanded(
+                                child: CupertinoPicker(
+                                  scrollController: minuteController,
+                                  looping: true,
+                                  itemExtent: 40,
+                                  useMagnifier: true,
+                                  magnification: 1.2,
+                                  selectionOverlay: CupertinoPickerDefaultSelectionOverlay(
+                                    background: _colorList[_selectedColor].withOpacity(0.15),
+                                  ),
+                                  onSelectedItemChanged: (index) {
+                                    setState(() {
+                                      tempMinutes = index;
+                                    });
+                                  },
+                                  children: List.generate(60, (index) {
+                                    return Center(
+                                      child: Text(
+                                        '$index',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // 确认按钮
+                  GestureDetector(
+                    onTap: () {
+                      // 检查是否至少设置了1分钟
+                      if (tempHours == 0 && tempMinutes == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please set at least 1 minute for the alert'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+                      
+                      // 更新父组件状态
+                      this.setState(() {
+                        _alertHours = tempHours;
+                        _alertMinutes = tempMinutes;
+                        _hasAlert = true;
+                      });
+                      
+                      Navigator.pop(context);
+                      completer.complete(true);
+                    },
+                    child: Container(
+                      height: 50,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: _colorList[_selectedColor],
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Set Alert',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      // 如果对话框不正常关闭（如点击外部区域），则视为取消
+      if (!completer.isCompleted) {
+        completer.complete(false);
+      }
+      
+      // 释放控制器
+      hourController.dispose();
+      minuteController.dispose();
+    });
+    
+    return completer.future;
   }
 }
