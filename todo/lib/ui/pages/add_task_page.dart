@@ -31,6 +31,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
   List<String> repeatList = ['None', 'Daily', 'Weekly', 'Monthly'];
   int _selectedColor = 0;
   
+  // 添加重复次数变量
+  int _repeatCount = 1;
+  
   final List<Color> _colorList = [
     Colors.green, // Green (default)
     Colors.blue,
@@ -61,7 +64,19 @@ class _AddTaskPageState extends State<AddTaskPage> {
       _startTime = widget.task!.startTime!;
       _endTime = widget.task!.endTime!;
       _selectedRemind = widget.task!.remind!;
-      _selectedRepeat = widget.task!.repeat!;
+      
+      // 处理重复设置
+      String repeatSetting = widget.task!.repeat!;
+      if (repeatSetting.contains(':')) {
+        // 如果是格式为"Daily:3"这样的字符串，解析出重复类型和次数
+        List<String> parts = repeatSetting.split(':');
+        _selectedRepeat = parts[0];
+        _repeatCount = int.tryParse(parts[1]) ?? 1;
+      } else {
+        _selectedRepeat = repeatSetting;
+        _repeatCount = 1;
+      }
+      
       _selectedColor = widget.task!.color!;
       
       // 编辑任务时，设置选中状态以便正确显示时间框
@@ -74,6 +89,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
       _endTime = DateFormat('hh:mm a').format(endTime);
       // Set default selected remind to 15 minutes
       _selectedRemind = 15;
+      // 设置默认为不重复
+      _selectedRepeat = 'None';
+      _repeatCount = 1;
     }
     _updateCurrentMonth();
   }
@@ -968,6 +986,111 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ),
                 const SizedBox(height: 20),
 
+                // Repeat Option Section
+                _buildSectionTitle('How often?', showDate: true),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    children: [
+                      // 选择重复模式的按钮
+                      Container(
+                        height: 60,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: [
+                            Expanded(child: _buildRepeatOptionButton('Once', 'None', isFirst: true)),
+                            Expanded(child: _buildRepeatOptionButton('Daily', 'Daily')),
+                            Expanded(child: _buildRepeatOptionButton('Weekly', 'Weekly')),
+                            Expanded(child: _buildRepeatOptionButton('Monthly', 'Monthly', isLast: true)),
+                          ],
+                        ),
+                      ),
+                      
+                      // 如果选择不是"Once"，显示重复次数调整UI
+                      if (_selectedRepeat != 'None')
+                        Column(
+                          children: [
+                            const SizedBox(height: 10), // 添加间隙
+                            Container(
+                              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                              margin: const EdgeInsets.only(bottom: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[800],
+                                borderRadius: const BorderRadius.only(
+                                  bottomLeft: Radius.circular(15),
+                                  bottomRight: Radius.circular(15),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _getRepeatText(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[700],
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // 减少按钮
+                                        IconButton(
+                                          icon: const Icon(Icons.remove, color: Colors.white),
+                                          onPressed: () {
+                                            setState(() {
+                                              if (_repeatCount > 1) {
+                                                _repeatCount--;
+                                              }
+                                            });
+                                          },
+                                        ),
+                                        // 显示当前次数
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                                          decoration: BoxDecoration(
+                                            color: _colorList[_selectedColor],
+                                            borderRadius: BorderRadius.circular(15),
+                                          ),
+                                          child: Text(
+                                            '$_repeatCount',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        // 增加按钮
+                                        IconButton(
+                                          icon: const Icon(Icons.add, color: Colors.white),
+                                          onPressed: () {
+                                            setState(() {
+                                              _repeatCount++;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+
                 // Color Selection
                 _buildSectionTitle('What color?'),
                 Container(
@@ -1032,11 +1155,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, {bool showDate = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
@@ -1045,6 +1168,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
               fontSize: 18,
             ),
           ),
+          if (showDate)
+            Text(
+              'Starting on ${DateFormat('yyyy-MM-dd').format(_selectedDate)}',
+              style: TextStyle(
+                color: Colors.pink[300],
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
         ],
       ),
     );
@@ -1082,7 +1214,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           endTime: _endTime,
           color: _selectedColor,
           remind: _selectedRemind,
-          repeat: _selectedRepeat,
+          repeat: _selectedRepeat == 'None' ? 'None' : "$_selectedRepeat:$_repeatCount",
         ),
       );
     } catch (e) {
@@ -1103,7 +1235,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           endTime: _endTime,
           color: _selectedColor,
           remind: _selectedRemind,
-          repeat: _selectedRepeat,
+          repeat: _selectedRepeat == 'None' ? 'None' : "$_selectedRepeat:$_repeatCount",
         ),
       );
     } catch (e) {
@@ -1218,5 +1350,61 @@ class _AddTaskPageState extends State<AddTaskPage> {
       print('Error formatting time range: $e');
       return '$_startTime–$_endTime';
     }
+  }
+
+  Widget _buildRepeatOptionButton(String label, String value, {bool isFirst = false, bool isLast = false}) {
+    bool isSelected = _selectedRepeat == value;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedRepeat = value;
+          // 如果从其他选项切换回"Once"，重置重复次数
+          if (value == 'None') {
+            _repeatCount = 1;
+          }
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? _colorList[_selectedColor] : Colors.grey[800],
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(isFirst ? 10 : 0),
+            bottomLeft: Radius.circular(isFirst ? 10 : 0),
+            topRight: Radius.circular(isLast ? 10 : 0),
+            bottomRight: Radius.circular(isLast ? 10 : 0),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.white70,
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 获取重复文本的方法，根据选择和数量返回正确的单复数形式
+  String _getRepeatText() {
+    String unit = '';
+    switch (_selectedRepeat) {
+      case 'Daily':
+        unit = _repeatCount == 1 ? 'day' : 'days';
+        break;
+      case 'Weekly':
+        unit = _repeatCount == 1 ? 'week' : 'weeks';
+        break;
+      case 'Monthly':
+        unit = _repeatCount == 1 ? 'month' : 'months';
+        break;
+      default:
+        return '';
+    }
+    return 'Every $_repeatCount $unit';
   }
 }
