@@ -998,9 +998,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     children: [
                       // 选择重复模式的按钮
                       Container(
-                        height: 60,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        height: 55,
+                        padding: const EdgeInsets.symmetric(horizontal: 0),
                         child: Row(
+                          mainAxisSize: MainAxisSize.max,
                           children: [
                             Expanded(child: _buildRepeatOptionButton('Once', 'None', isFirst: true)),
                             Expanded(child: _buildRepeatOptionButton('Daily', 'Daily')),
@@ -1365,7 +1366,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
         decoration: BoxDecoration(
           color: isSelected ? _colorList[_selectedColor] : Colors.grey[800],
           borderRadius: BorderRadius.only(
@@ -1380,7 +1382,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
             label,
             style: TextStyle(
               color: isSelected ? Colors.white : Colors.white70,
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -1405,6 +1407,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       default:
         return '';
     }
-    return 'Every $_repeatCount $unit';
+    // 如果是1，就不显示数字
+    return _repeatCount == 1 ? 'Every $unit' : 'Every $_repeatCount $unit';
   }
 }
