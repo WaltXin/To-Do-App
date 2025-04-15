@@ -283,26 +283,51 @@ class _HomePageState extends State<HomePage> {
           // 获取当前选中日期的任务列表
           final tasksForSelectedDate = _taskController.taskList.where((task) {
             // 检查任务是否应该在选定日期显示
-                bool shouldShow = false;
+            bool shouldShow = false;
+            
+            String repeatType = task.repeat!;
+            int repeatCount = 1;
+            
+            // 解析新的重复格式 "Daily:3" 等
+            if (task.repeat!.contains(':')) {
+              List<String> parts = task.repeat!.split(':');
+              repeatType = parts[0];
+              repeatCount = int.tryParse(parts[1]) ?? 1;
+            }
 
-                if (task.repeat == 'Daily') {
-                  shouldShow = true;
-                } else if (task.repeat == 'Weekly') {
-                  shouldShow = _selectedDate
-                      .difference(DateFormat.yMd().parse(task.date!))
-                      .inDays %
-                      7 ==
-                      0;
-                } else if (task.repeat == 'Monthly') {
-                  shouldShow = DateFormat.yMd().parse(task.date!).day ==
-                      _selectedDate.day;
-                } else {
+            // 获取任务的创建日期
+            var taskStartDate = DateFormat.yMd().parse(task.date!);
+            
+            if (repeatType == 'None') {
               // 对于不重复的任务，只在确切日期显示
-                  var taskDate = DateFormat.yMd().parse(task.date!);
-                  shouldShow = taskDate.year == _selectedDate.year &&
-                             taskDate.month == _selectedDate.month &&
-                             taskDate.day == _selectedDate.day;
-                }
+              shouldShow = taskStartDate.year == _selectedDate.year &&
+                          taskStartDate.month == _selectedDate.month &&
+                          taskStartDate.day == _selectedDate.day;
+            } else {
+              // 计算从任务创建日期到选定日期的天数差
+              int daysDifference = _selectedDate.difference(taskStartDate).inDays;
+              
+              // 如果选定日期在任务创建日期之前，不显示
+              if (daysDifference < 0) {
+                return false;
+              }
+              
+              if (repeatType == 'Daily') {
+                // 对于每N天重复的任务
+                shouldShow = daysDifference % repeatCount == 0;
+              } else if (repeatType == 'Weekly') {
+                // 对于每N周重复的任务，检查是否是相同的星期几且间隔是N周的倍数
+                bool isSameWeekday = _selectedDate.weekday == taskStartDate.weekday;
+                int weeksDifference = daysDifference ~/ 7;
+                shouldShow = isSameWeekday && (weeksDifference % repeatCount == 0);
+              } else if (repeatType == 'Monthly') {
+                // 对于每N月重复的任务，检查是否是相同的日期且间隔是N月的倍数
+                bool isSameDayOfMonth = _selectedDate.day == taskStartDate.day;
+                int monthsDifference = (_selectedDate.year - taskStartDate.year) * 12 + 
+                                      (_selectedDate.month - taskStartDate.month);
+                shouldShow = isSameDayOfMonth && (monthsDifference % repeatCount == 0);
+              }
+            }
 
             return shouldShow;
           }).toList();
