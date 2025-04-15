@@ -100,6 +100,23 @@ class _AddTaskPageState extends State<AddTaskPage> {
     return minutes;
   }
   
+  // 添加方法将分钟转换为小时和分钟的格式化文本
+  String _formatDuration(int minutes) {
+    if (minutes < 60) {
+      return '$minutes minutes';
+    } else {
+      final int hours = minutes ~/ 60;
+      final int remainingMinutes = minutes % 60;
+      
+      if (remainingMinutes == 0) {
+        return hours == 1 ? '1 hour' : '$hours hours';
+      } else {
+        final String hourText = hours == 1 ? '1 hour' : '$hours hours';
+        return '$hourText $remainingMinutes minutes';
+      }
+    }
+  }
+
   // Add this method to show time picker dialog
   Future<bool> _showTimePickerDialog({required bool isStartTime}) {
     // Create a Completer to handle asynchronous result
@@ -172,10 +189,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5), // Reduce vertical padding
                     child: Text(
-                      'This task takes $durationMinutes mins.',
+                      'This task takes ${_formatDuration(durationMinutes)}.',
                       style: const TextStyle(
                         color: Colors.white70,
-                        fontSize: 22, // Reduce font size
+                        fontSize: 18, // Reduce font size
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -931,7 +948,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              'Duration: ${_calculateDurationInMinutes()} minutes',
+                              'Duration: ${_formatDuration(_calculateDurationInMinutes())}',
                               style: TextStyle(
                                 color: _colorList[_selectedColor],
                                 fontSize: 14,
