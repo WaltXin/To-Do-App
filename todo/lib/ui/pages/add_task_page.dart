@@ -89,8 +89,14 @@ class _AddTaskPageState extends State<AddTaskPage> {
     final DateTime startDateTime = format.parse(_startTime);
     final DateTime endDateTime = format.parse(_endTime);
     
-    // 计算分钟差
-    final int minutes = endDateTime.difference(startDateTime).inMinutes;
+    // 计算分钟差，考虑跨越午夜的情况
+    int minutes = endDateTime.difference(startDateTime).inMinutes;
+    
+    // 如果是负数，说明跨越了午夜，需要加上24小时的分钟数
+    if (minutes < 0) {
+      minutes += 24 * 60; // 加上一天的分钟数
+    }
+    
     return minutes;
   }
   
@@ -350,24 +356,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                               setState(() {
                                 if (editingStartTime) {
                                   _startTime = timeString;
-                                  // 检查时间顺序是否合理
-                                  final DateTime endTime = format.parse(_endTime);
-                                  if (newTime.isAfter(endTime) || newTime.isAtSameMomentAs(endTime)) {
-                                    // 如果开始时间晚于结束时间，调整结束时间
-                                    final newEndTime = newTime.add(const Duration(minutes: 1));
-                                    _endTime = DateFormat('hh:mm a').format(newEndTime);
-                                  }
                                 } else {
                                   _endTime = timeString;
-                                  // 检查时间顺序是否合理
-                                  final DateTime startTime = format.parse(_startTime);
-                                  if (newTime.isBefore(startTime) || newTime.isAtSameMomentAs(startTime)) {
-                                    // 如果结束时间早于开始时间，调整为开始时间后1分钟
-                                    final newEndTime = startTime.add(const Duration(minutes: 1));
-                                    _endTime = DateFormat('hh:mm a').format(newEndTime);
-                                  } else {
-                                    _endTime = timeString;
-                                  }
                                 }
                                 
                                 // 更新持续时间
@@ -434,23 +424,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                               setState(() {
                                 if (editingStartTime) {
                                   _startTime = timeString;
-                                  // 检查时间顺序是否合理
-                                  final DateTime endTime = format.parse(_endTime);
-                                  if (newTime.isAfter(endTime) || newTime.isAtSameMomentAs(endTime)) {
-                                    // 如果开始时间晚于结束时间，调整结束时间
-                                    final newEndTime = newTime.add(const Duration(minutes: 1));
-                                    _endTime = DateFormat('hh:mm a').format(newEndTime);
-                                  }
                                 } else {
-                                  // 检查时间顺序是否合理
-                                  final DateTime startTime = format.parse(_startTime);
-                                  if (newTime.isBefore(startTime) || newTime.isAtSameMomentAs(startTime)) {
-                                    // 如果结束时间早于开始时间，调整为开始时间后1分钟
-                                    final newEndTime = startTime.add(const Duration(minutes: 1));
-                                    _endTime = DateFormat('hh:mm a').format(newEndTime);
-                                  } else {
-                                    _endTime = timeString;
-                                  }
+                                  _endTime = timeString;
                                 }
                                 
                                 // 更新持续时间
@@ -518,23 +493,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                               setState(() {
                                 if (editingStartTime) {
                                   _startTime = timeString;
-                                  // 检查时间顺序是否合理
-                                  final DateTime endTime = format.parse(_endTime);
-                                  if (newTime.isAfter(endTime) || newTime.isAtSameMomentAs(endTime)) {
-                                    // 如果开始时间晚于结束时间，调整结束时间
-                                    final newEndTime = newTime.add(const Duration(minutes: 1));
-                                    _endTime = DateFormat('hh:mm a').format(newEndTime);
-                                  }
                                 } else {
-                                  // 检查时间顺序是否合理
-                                  final DateTime startTime = format.parse(_startTime);
-                                  if (newTime.isBefore(startTime) || newTime.isAtSameMomentAs(startTime)) {
-                                    // 如果结束时间早于开始时间，调整为开始时间后1分钟
-                                    final newEndTime = startTime.add(const Duration(minutes: 1));
-                                    _endTime = DateFormat('hh:mm a').format(newEndTime);
-                                  } else {
-                                    _endTime = timeString;
-                                  }
+                                  _endTime = timeString;
                                 }
                                 
                                 // 更新持续时间
@@ -665,22 +625,19 @@ class _AddTaskPageState extends State<AddTaskPage> {
     return completer.future;
   }
 
-  // Add method to check if task ends after midnight
+  // 更新判断任务是否跨越午夜的方法
   bool _checkIfEndsAfterMidnight() {
     final DateFormat format = DateFormat('hh:mm a');
     final DateTime startDateTime = format.parse(_startTime);
     final DateTime endDateTime = format.parse(_endTime);
     
-    // Check if past midnight (end time less than start time, or equal but one is AM and the other is PM)
-    if (endDateTime.hour < startDateTime.hour) {
-      return true;
-    } else if (endDateTime.hour == startDateTime.hour && 
-               endDateTime.minute < startDateTime.minute &&
-               (startDateTime.hour < 12 && endDateTime.hour < 12)) {
+    // 计算分钟差，如果是负数则跨越了午夜
+    int minutes = endDateTime.difference(startDateTime).inMinutes;
+    if (minutes < 0) {
       return true;
     }
     
-    // Check AM/PM difference
+    // 保留原有逻辑，检查AM/PM差异
     bool startIsPM = _startTime.toLowerCase().contains('pm');
     bool endIsAM = _endTime.toLowerCase().contains('am');
     
@@ -758,107 +715,107 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     children: [
                       // Date selection row
                       GestureDetector(
-                        onTap: () {
-                          setState(() {
+                          onTap: () {
+                            setState(() {
                             _showCalendar = !_showCalendar;
-                          });
-                        },
-                        child: Container(
+                            });
+                          },
+                          child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-                          decoration: BoxDecoration(
+                            decoration: BoxDecoration(
                             color: Colors.grey[800],
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Row(
-                            children: [
+                    child: Row(
+                      children: [
                               Icon(
                                 Icons.calendar_today,
                                 color: _colorList[_selectedColor],
                                 size: 20,
                               ),
                               const SizedBox(width: 15),
-                              Text(
+                        Text(
                                 DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate),
-                                style: const TextStyle(
+                          style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
+                            fontSize: 16,
+                          ),
+                        ),
                               const Spacer(),
                               Icon(
                                 _showCalendar ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                                 color: Colors.white70,
                                 size: 20,
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      
+                      ],
+                    ),
+                  ),
+                ),
+                
                       // Calendar View
-                      if (_showCalendar)
-                        Container(
+                if (_showCalendar)
+                  Container(
                           margin: const EdgeInsets.only(top: 15),
-                          decoration: BoxDecoration(
+                    decoration: BoxDecoration(
                             color: Colors.grey[800],
                             borderRadius: BorderRadius.circular(10),
-                          ),
+                    ),
                           padding: const EdgeInsets.all(10),
-                          child: Column(
-                            children: [
-                              // Month navigation
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _currentMonth,
-                                    style: const TextStyle(
-                                      color: Colors.white,
+                    child: Column(
+                      children: [
+                        // Month navigation
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _currentMonth,
+                                  style: const TextStyle(
+                                    color: Colors.white,
                                       fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  Row(
-                                    children: [
-                                      IconButton(
+                            ),
+                            Row(
+                              children: [
+                                IconButton(
                                         icon: const Icon(Icons.arrow_back_ios, size: 14, color: Colors.white),
-                                        onPressed: () {
-                                          setState(() {
-                                            _selectedDate = DateTime(_selectedDate.year, _selectedDate.month - 1, _selectedDate.day);
-                                            _updateCurrentMonth();
-                                          });
-                                        },
-                                      ),
-                                      IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month - 1, _selectedDate.day);
+                                      _updateCurrentMonth();
+                                    });
+                                  },
+                                ),
+                                IconButton(
                                         icon: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white),
-                                        onPressed: () {
-                                          setState(() {
-                                            _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + 1, _selectedDate.day);
-                                            _updateCurrentMonth();
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              
-                              // Calendar grid
-                              SizedBox(
-                                height: 230,
-                                child: _buildCalendarGrid(),
-                              ),
-                            ],
-                          ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + 1, _selectedDate.day);
+                                      _updateCurrentMonth();
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      
-                      const SizedBox(height: 20),
-                      
+                        
+                        // Calendar grid
+                        SizedBox(
+                                height: 230,
+                          child: _buildCalendarGrid(),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                const SizedBox(height: 20),
+
                       // Time selection fields
                       Row(
-                        children: [
+                    children: [
                           // Start Time Field
-                          Expanded(
+                      Expanded(
                             child: GestureDetector(
                               onTap: () async {
                                 // Show time picker dialog with Start time
@@ -866,7 +823,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                 // Update UI
                                 setState(() {});
                               },
-                              child: Container(
+                          child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
                                 decoration: BoxDecoration(
                                   color: Colors.grey[800],
@@ -874,7 +831,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                              children: [
                                     Text(
                                       'Start Time',
                                       style: TextStyle(
@@ -907,7 +864,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           
                           // End Time Field
                           Expanded(
-                            child: GestureDetector(
+                                      child: GestureDetector(
                               onTap: () async {
                                 // Show time picker dialog with End time
                                 await _showTimePickerDialog(isStartTime: false);
@@ -925,11 +882,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                   children: [
                                     Text(
                                       'End Time',
-                                      style: TextStyle(
+                                            style: TextStyle(
                                         color: Colors.grey[400],
-                                        fontSize: 14,
-                                      ),
-                                    ),
+                                              fontSize: 14,
+                                            ),
+                                          ),
                                     const SizedBox(height: 5),
                                     Row(
                                       children: [
@@ -944,10 +901,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                           ),
                                         ),
                                       ],
-                                    ),
-                                  ],
                                 ),
-                              ),
+                              ],
+                            ),
+                          ),
                             ),
                           ),
                         ],
