@@ -45,9 +45,9 @@ class _HomePageState extends State<HomePage> {
       body: Stack(
         children: [
           Column(
-            children: [
-              _addTaskBar(),
-              _addDateBar(),
+        children: [
+          _addTaskBar(),
+          _addDateBar(),
               _showTasks(),
             ],
           ),
@@ -76,10 +76,10 @@ class _HomePageState extends State<HomePage> {
           GestureDetector(
             onTap: _showMonthCalendar,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  DateFormat.yMMMMd().format(DateTime.now()),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                DateFormat.yMMMMd().format(DateTime.now()),
                   style: GoogleFonts.lato(
                     textStyle: const TextStyle(
                       color: Colors.white,
@@ -87,9 +87,9 @@ class _HomePageState extends State<HomePage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                Text(
-                  'Today',
+              ),
+              Text(
+                'Today',
                   style: GoogleFonts.lato(
                     textStyle: const TextStyle(
                       color: Colors.white70,
@@ -129,7 +129,7 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 _currentWeekText(),
                 style: GoogleFonts.lato(
-                  textStyle: const TextStyle(
+            textStyle: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -203,10 +203,10 @@ class _HomePageState extends State<HomePage> {
               
               return GestureDetector(
                 onTap: () {
-                  setState(() {
+          setState(() {
                     _selectedDate = date;
-                  });
-                },
+          });
+        },
                 child: Container(
                   width: (MediaQuery.of(context).size.width - 56) / 7,
                   decoration: BoxDecoration(
@@ -283,27 +283,27 @@ class _HomePageState extends State<HomePage> {
           // 获取当前选中日期的任务列表
           final tasksForSelectedDate = _taskController.taskList.where((task) {
             // 检查任务是否应该在选定日期显示
-            bool shouldShow = false;
-            
-            if (task.repeat == 'Daily') {
-              shouldShow = true;
-            } else if (task.repeat == 'Weekly') {
-              shouldShow = _selectedDate
-                  .difference(DateFormat.yMd().parse(task.date!))
-                  .inDays %
-                  7 ==
-                  0;
-            } else if (task.repeat == 'Monthly') {
-              shouldShow = DateFormat.yMd().parse(task.date!).day ==
-                  _selectedDate.day;
-            } else {
+                bool shouldShow = false;
+
+                if (task.repeat == 'Daily') {
+                  shouldShow = true;
+                } else if (task.repeat == 'Weekly') {
+                  shouldShow = _selectedDate
+                      .difference(DateFormat.yMd().parse(task.date!))
+                      .inDays %
+                      7 ==
+                      0;
+                } else if (task.repeat == 'Monthly') {
+                  shouldShow = DateFormat.yMd().parse(task.date!).day ==
+                      _selectedDate.day;
+                } else {
               // 对于不重复的任务，只在确切日期显示
-              var taskDate = DateFormat.yMd().parse(task.date!);
-              shouldShow = taskDate.year == _selectedDate.year &&
-                      taskDate.month == _selectedDate.month &&
-                      taskDate.day == _selectedDate.day;
-            }
-            
+                  var taskDate = DateFormat.yMd().parse(task.date!);
+                  shouldShow = taskDate.year == _selectedDate.year &&
+                             taskDate.month == _selectedDate.month &&
+                             taskDate.day == _selectedDate.day;
+                }
+
             return shouldShow;
           }).toList();
           
@@ -352,7 +352,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   );
-                },
+              },
                 itemCount: tasksForSelectedDate.length,
               ),
             ),
@@ -405,7 +405,7 @@ class _HomePageState extends State<HomePage> {
           // 任务图标
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      children: [
               Container(
                 height: 60,
                 width: 60,
@@ -443,7 +443,7 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                children: [
                 Text(
                   timeRange,
                   style: GoogleFonts.lato(
@@ -581,11 +581,11 @@ class _HomePageState extends State<HomePage> {
               shape: BoxShape.circle,
             ),
             child: SvgPicture.asset(
-              'images/task.svg',
-              // ignore: deprecated_member_use
+                    'images/task.svg',
+                    // ignore: deprecated_member_use
               color: primaryClr.withAlpha(179),
               height: 70,
-              semanticsLabel: 'Task',
+                    semanticsLabel: 'Task',
             ),
           ),
           const SizedBox(height: 15),
@@ -639,12 +639,12 @@ class _HomePageState extends State<HomePage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
+                        ),
                 ],
               ),
             ),
           ),
-        ],
+      ],
       ),
     );
   }
@@ -667,8 +667,8 @@ class _HomePageState extends State<HomePage> {
             Container(
               height: 6,
               width: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
                 color: Colors.grey[600],
               ),
               margin: const EdgeInsets.only(top: 10, bottom: 20),
@@ -699,12 +699,12 @@ class _HomePageState extends State<HomePage> {
                     icon: Icons.edit,
                   ),
             _buildBottomSheetButton(
-              label: 'Delete Task',
-              onTap: () {
-                NotifyHelper().cancelNotification(task);
-                _taskController.deleteTasks(task);
-                Get.back();
-              },
+                label: 'Delete Task',
+                onTap: () {
+                  NotifyHelper().cancelNotification(task);
+                  _taskController.deleteTasks(task);
+                  Get.back();
+                },
               clr: Colors.red[400]!,
               icon: Icons.delete,
             ),
@@ -717,8 +717,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildBottomSheetButton({
     required String label,
-    required Function() onTap,
-    required Color clr,
+      required Function() onTap,
+      required Color clr,
     required IconData icon,
   }) {
     return GestureDetector(
@@ -727,8 +727,8 @@ class _HomePageState extends State<HomePage> {
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 20),
         height: 60,
         decoration: BoxDecoration(
-          border: Border.all(
-            width: 2,
+            border: Border.all(
+              width: 2,
             color: clr,
           ),
           borderRadius: BorderRadius.circular(20),
@@ -1063,8 +1063,8 @@ class _HomePageState extends State<HomePage> {
               color: isSelected ? primaryClr : (isToday ? Colors.grey[700] : Colors.transparent),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Center(
-              child: Text(
+        child: Center(
+          child: Text(
                 i.toString(),
                 style: GoogleFonts.lato(
                   textStyle: TextStyle(
