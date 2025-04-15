@@ -362,13 +362,44 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // 添加格式化持续时间的方法
+  String _formatDuration(int minutes) {
+    // 处理负数持续时间（跨夜任务）
+    bool isOvernight = minutes < 0;
+    if (isOvernight) {
+      minutes += 24 * 60; // 添加一天的分钟数
+    }
+    
+    if (minutes < 60) {
+      return '$minutes mins';
+    } else {
+      final int hours = minutes ~/ 60;
+      final int remainingMinutes = minutes % 60;
+      
+      if (remainingMinutes == 0) {
+        return hours == 1 ? '1 hour' : '$hours hours';
+      } else {
+        return '$hours h $remainingMinutes m';
+      }
+    }
+  }
+  
   Widget _buildTimelineTask(Task task, int index) {
     // 计算任务持续时间
     var startTime = DateFormat('hh:mm a').parse(task.startTime!.trim());
     var endTime = DateFormat('hh:mm a').parse(task.endTime!.trim());
     final duration = endTime.difference(startTime);
     final durationMinutes = duration.inMinutes;
-    final timeRange = '${task.startTime}-${task.endTime} ($durationMinutes mins)';
+    
+    // 检查是否是跨夜任务
+    final bool isOvernight = durationMinutes < 0;
+    final int adjustedDuration = isOvernight ? durationMinutes + 24 * 60 : durationMinutes;
+    
+    // 格式化时间显示
+    final String formattedDuration = _formatDuration(durationMinutes);
+    final String timeRange = isOvernight 
+        ? '${task.startTime}-${task.endTime} (${formattedDuration})'
+        : '${task.startTime}-${task.endTime} (${formattedDuration})';
     
     // 获取用于图标的颜色
     final bgColor = _getBGClr(task.color ?? 0);
@@ -395,7 +426,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 5),
               Container(
-                height: isOverlapping ? 110 : 80,
+                height: (isOverlapping || isOvernight) ? 110 : 80,
                 width: 0.8,
                 color: Colors.grey[700],
               ),
@@ -405,7 +436,7 @@ class _HomePageState extends State<HomePage> {
           // 任务图标
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+            children: [
               Container(
                 height: 60,
                 width: 60,
@@ -436,6 +467,25 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
+              // 添加overnight标记
+              if (isOvernight)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, left: 5),
+                  child: Row(
+                    children: [
+                      Icon(Icons.nightlight_round, color: Colors.blue[400], size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Overnight task',
+                        style: GoogleFonts.lato(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[400],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
           const SizedBox(width: 15),
@@ -443,12 +493,12 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              children: [
                 Text(
                   timeRange,
                   style: GoogleFonts.lato(
                     fontSize: 12,
-                    color: Colors.white70,
+                    color: isOvernight ? Colors.blue[300] : Colors.white70,
                   ),
                 ),
                 const SizedBox(height: 5),
