@@ -73,4 +73,6 @@ Follow these instructions to get the project up and running on your local machin
    flutter build ios
    ```
    In xcode, set the runner to debug(won't work if disconnect) or release(will work even disconnect)
+   todo/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme 
+   buildConfiguration = "Release" //Debug or Release
 
